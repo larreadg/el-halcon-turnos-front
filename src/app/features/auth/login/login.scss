@@ -1,0 +1,100 @@
+:host {
+  display: block;
+}
+
+// Brand panel background — uses the theme's primary-950 token (deep cyan), not a hardcoded hex
+.halcon-brand {
+  background: var(--p-primary-950);
+}
+
+// Signal Forms' [formField] binds PrimeNG's `invalid` input from field validity alone,
+// so required-but-empty fields render as invalid before the user touches them.
+// Restore the default border (theme token) until the field has been touched.
+.halcon-field.p-invalid:not(.halcon-touched) {
+  border-color: var(--p-inputtext-border-color);
+}
+
+// Radar sweep signature — conic-gradient rotation and concentric rings have no PrimeFlex/PrimeNG equivalent
+.radar {
+  position: relative;
+  width: 14rem;
+  height: 14rem;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--p-primary-300) 30%, transparent);
+  background: repeating-radial-gradient(
+    circle,
+    transparent 0,
+    transparent calc(3.5rem - 1px),
+    color-mix(in srgb, var(--p-primary-300) 22%, transparent) calc(3.5rem - 1px),
+    color-mix(in srgb, var(--p-primary-300) 22%, transparent) 3.5rem
+  );
+}
+
+.radar::before,
+.radar::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+}
+
+.radar::before {
+  inset: 0;
+  background: conic-gradient(
+    from 0deg,
+    color-mix(in srgb, var(--p-primary-200) 60%, transparent),
+    transparent 30%
+  );
+  animation: halcon-radar-sweep 4s linear infinite;
+}
+
+.radar::after {
+  top: 50%;
+  left: 50%;
+  width: 0.5rem;
+  height: 0.5rem;
+  background: var(--p-primary-100);
+  transform: translate(-50%, -50%);
+}
+
+.radar-blip {
+  position: absolute;
+  top: var(--top);
+  left: var(--left);
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--p-primary-100);
+  animation: halcon-radar-blip 4s ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+
+@keyframes halcon-radar-sweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes halcon-radar-blip {
+  0%,
+  85%,
+  100% {
+    opacity: 0.15;
+    box-shadow: none;
+  }
+  92% {
+    opacity: 1;
+    box-shadow: 0 0 0.5rem var(--p-primary-100);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .radar::before {
+    animation: none;
+  }
+
+  .radar-blip {
+    animation: none;
+    opacity: 0.5;
+  }
+}

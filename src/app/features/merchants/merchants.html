@@ -1,0 +1,227 @@
+<div class="flex flex-column gap-4">
+  <div class="flex flex-column sm:flex-row sm:align-items-center sm:justify-content-between gap-2">
+    <div>
+      <h1 class="text-2xl font-bold m-0">Merchants</h1>
+      <p class="text-color-secondary mt-1 mb-0">Administrá los usuarios de tipo comercio.</p>
+    </div>
+    <p-button label="Nuevo merchant" icon="pi pi-plus" (onClick)="abrirCrear()" />
+  </div>
+
+  <p-table
+    [value]="merchants()"
+    [loading]="cargando()"
+    dataKey="id"
+    styleClass="surface-card border-round shadow-1"
+  >
+    <ng-template #header>
+      <tr>
+        <th>Usuario</th>
+        <th>Nombre</th>
+        <th>Documento</th>
+        <th>Puesto</th>
+        <th>Estado</th>
+        <th>Creado</th>
+        <th>Modificado</th>
+        <th class="w-10rem"></th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-merchant>
+      <tr>
+        <td>{{ merchant.usuario }}</td>
+        <td>{{ merchant.nombres }} {{ merchant.apellidos }}</td>
+        <td>{{ merchant.documento }}</td>
+        <td>{{ merchant.puesto ?? '—' }}</td>
+        <td>
+          <p-tag
+            [value]="merchant.activo ? 'Activo' : 'Inactivo'"
+            [severity]="merchant.activo ? 'success' : 'danger'"
+          />
+        </td>
+        <td>{{ merchant.creado_el }}</td>
+        <td>{{ merchant.modificado_el ?? '-' }}</td>
+        <td>
+          <div class="flex gap-1 justify-content-end">
+            <p-button
+              icon="pi pi-pencil"
+              [text]="true"
+              severity="secondary"
+              ariaLabel="Editar"
+              (onClick)="abrirEditar(merchant)"
+            />
+            <p-button
+              icon="pi pi-key"
+              [text]="true"
+              severity="secondary"
+              [loading]="reseteando() === merchant.id"
+              ariaLabel="Resetear contraseña"
+              (onClick)="confirmarResetearClave(merchant)"
+            />
+            <p-button
+              icon="pi pi-trash"
+              [text]="true"
+              severity="danger"
+              ariaLabel="Eliminar"
+              (onClick)="confirmarEliminar(merchant)"
+            />
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="8" class="text-center text-color-secondary py-4">
+          No hay merchants registrados.
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog
+  [visible]="dialogVisible()"
+  (visibleChange)="dialogVisible.set($event)"
+  [modal]="true"
+  [header]="modo() === 'crear' ? 'Nuevo merchant' : 'Editar merchant'"
+  styleClass="w-full md:w-30rem"
+>
+  <form class="flex flex-column gap-3" (submit)="onSubmit(); $event.preventDefault()">
+    <div class="flex flex-column gap-2">
+      <label for="nombres">Nombres</label>
+      <input
+        pInputText
+        id="nombres"
+        type="text"
+        autocomplete="off"
+        placeholder="Nombres"
+        [formField]="merchantForm.nombres"
+      />
+      @if (merchantForm.nombres().touched() && merchantForm.nombres().errors().length) {
+        <small class="text-red-500">{{ merchantForm.nombres().errors()[0].message }}</small>
+      }
+    </div>
+
+    <div class="flex flex-column gap-2">
+      <label for="apellidos">Apellidos</label>
+      <input
+        pInputText
+        id="apellidos"
+        type="text"
+        autocomplete="off"
+        placeholder="Apellidos"
+        [formField]="merchantForm.apellidos"
+      />
+      @if (merchantForm.apellidos().touched() && merchantForm.apellidos().errors().length) {
+        <small class="text-red-500">{{ merchantForm.apellidos().errors()[0].message }}</small>
+      }
+    </div>
+
+    <div class="flex flex-column gap-2">
+      <label for="documento">Documento</label>
+      <input
+        pInputText
+        id="documento"
+        type="text"
+        autocomplete="off"
+        placeholder="Documento"
+        [formField]="merchantForm.documento"
+      />
+      @if (merchantForm.documento().touched() && merchantForm.documento().errors().length) {
+        <small class="text-red-500">{{ merchantForm.documento().errors()[0].message }}</small>
+      }
+    </div>
+
+    <div class="flex flex-column gap-2">
+      <label for="puesto">Puesto / Box</label>
+      <input
+        pInputText
+        id="puesto"
+        type="text"
+        autocomplete="off"
+        placeholder="Box 1"
+        [formField]="merchantForm.puesto"
+      />
+    </div>
+
+    @if (errorMensaje()) {
+      <p-message severity="error" [text]="errorMensaje()!" />
+    }
+
+    <div class="flex justify-content-end gap-2 mt-2">
+      <p-button
+        type="button"
+        label="Cancelar"
+        [text]="true"
+        severity="secondary"
+        (onClick)="cerrarDialog()"
+      />
+      <p-button type="submit" label="Guardar" [loading]="guardando()" [disabled]="guardando()" />
+    </div>
+  </form>
+</p-dialog>
+
+<p-dialog
+  [visible]="credencialesDialogVisible()"
+  (visibleChange)="credencialesDialogVisible.set($event)"
+  [modal]="true"
+  [closable]="false"
+  header="Credenciales generadas"
+  styleClass="w-full md:w-30rem"
+>
+  @if (credencialesGeneradas()) {
+    <div class="flex flex-column gap-3">
+      <p-message
+        severity="warn"
+        text="Guardá estos datos ahora: la contraseña no se podrá volver a ver."
+      />
+
+      <div class="flex flex-column gap-2">
+        <label for="credUsuario">Usuario</label>
+        <div class="flex align-items-center gap-2">
+          <input
+            pInputText
+            id="credUsuario"
+            type="text"
+            readonly
+            class="flex-1"
+            [value]="credencialesGeneradas()!.usuario"
+          />
+          <p-button
+            icon="pi pi-copy"
+            [text]="true"
+            severity="secondary"
+            ariaLabel="Copiar usuario"
+            (onClick)="copiar(credencialesGeneradas()!.usuario)"
+          />
+        </div>
+      </div>
+
+      <div class="flex flex-column gap-2">
+        <label for="credClave">Contraseña</label>
+        <div class="flex align-items-center gap-2">
+          <input
+            pInputText
+            id="credClave"
+            type="text"
+            readonly
+            class="flex-1"
+            [value]="credencialesGeneradas()!.clave"
+          />
+          <p-button
+            icon="pi pi-copy"
+            [text]="true"
+            severity="secondary"
+            ariaLabel="Copiar contraseña"
+            (onClick)="copiar(credencialesGeneradas()!.clave)"
+          />
+        </div>
+      </div>
+    </div>
+  }
+
+  <div class="flex justify-content-end mt-3">
+    <p-button label="Listo" (onClick)="cerrarCredenciales()" />
+  </div>
+</p-dialog>
+
+<p-toast />
+<p-confirmdialog />

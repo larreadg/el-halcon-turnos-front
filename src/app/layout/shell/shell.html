@@ -1,0 +1,84 @@
+<div class="flex min-h-screen">
+  <aside
+    class="hidden lg:flex lg:flex-column lg:w-18rem surface-card border-right-1 surface-border p-3 gap-2"
+  >
+    <ng-container *ngTemplateOutlet="navContent" />
+  </aside>
+
+  <p-drawer
+    [visible]="sidebarVisible()"
+    (visibleChange)="sidebarVisible.set($event)"
+    position="left"
+    [modal]="true"
+    styleClass="w-18rem"
+  >
+    <ng-container *ngTemplateOutlet="navContent" />
+  </p-drawer>
+
+  <div class="flex flex-column flex-1">
+    <header
+      class="flex align-items-center justify-content-between gap-3 px-3 md:px-4 py-3 surface-card border-bottom-1 surface-border"
+    >
+      <div class="flex align-items-center gap-2">
+        <p-button
+          icon="pi pi-bars"
+          [text]="true"
+          severity="secondary"
+          styleClass="lg:hidden"
+          ariaLabel="Abrir menú"
+          (onClick)="toggleSidebar()"
+        />
+        <img src="logo-cyan.png" alt="El Halcón" class="w-2rem h-2rem lg:hidden" />
+        <span class="font-brand text-lg font-bold">EL HALCÓN</span>
+      </div>
+
+      <div class="flex align-items-center gap-3">
+        <span class="text-color-secondary hidden sm:inline">{{ usuario() }}</span>
+        <p-button
+          icon="pi pi-sign-out"
+          [text]="true"
+          severity="secondary"
+          ariaLabel="Cerrar sesión"
+          (onClick)="cerrarSesion()"
+        />
+      </div>
+    </header>
+
+    <main class="flex-1 p-3 md:p-4 surface-ground">
+      <router-outlet />
+    </main>
+  </div>
+</div>
+
+<ng-template #navContent>
+  <div class="flex align-items-center gap-2 px-2 py-3">
+    <img src="logo-cyan.png" alt="El Halcón" class="w-2rem h-2rem" />
+    <span class="font-brand text-xl font-bold">EL HALCÓN</span>
+  </div>
+
+  <nav class="flex flex-column gap-1">
+    @for (item of navItems; track item.label) {
+      @if (item.route) {
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="halcon-nav-active"
+          class="flex align-items-center gap-2 px-3 py-2 border-round-md no-underline halcon-nav-item"
+          (click)="cerrarSidebar()"
+        >
+          <i class="{{ item.icon }}"></i>
+          <span>{{ item.label }}</span>
+        </a>
+      } @else {
+        <span
+          class="flex align-items-center justify-content-between gap-2 px-3 py-2 border-round-md text-color-secondary"
+        >
+          <span class="flex align-items-center gap-2">
+            <i class="{{ item.icon }}"></i>
+            <span>{{ item.label }}</span>
+          </span>
+          <span class="text-xs">Próximamente</span>
+        </span>
+      }
+    }
+  </nav>
+</ng-template>

@@ -1,0 +1,64 @@
+<div class="flex flex-column gap-4">
+  <div>
+    <h1 class="text-2xl font-bold m-0">Configuración de turnos</h1>
+    <p class="text-color-secondary mt-1 mb-0">
+      Definí desde qué número arrancan los turnos de hoy y reiniciá la numeración si se agota un
+      rollo físico de tickets.
+    </p>
+  </div>
+
+  <p-card styleClass="w-full md:w-30rem">
+    <div class="flex flex-column gap-3">
+      @if (cargando()) {
+        <p class="text-color-secondary m-0">Cargando configuración...</p>
+      } @else if (configuracion()) {
+        <div class="flex flex-column gap-1">
+          <span class="text-color-secondary text-sm">Estado actual</span>
+          <span class="text-xl font-bold">
+            Numeración activa desde N° {{ configuracion()!.numero_inicial }}
+          </span>
+          <span class="text-color-secondary text-sm">Fecha: {{ configuracion()!.fecha }}</span>
+          <span class="text-color-secondary text-sm">
+            Configurado el: {{ configuracion()!.creado_el }}
+          </span>
+        </div>
+      } @else {
+        <p-message
+          severity="warn"
+          text="Sin configurar. Definí el número inicial de turnos para hoy."
+        />
+      }
+
+      <form class="flex flex-column gap-3" (submit)="onSubmit(); $event.preventDefault()">
+        <div class="flex flex-column gap-2">
+          <label for="numeroInicial">Número inicial</label>
+          <input
+            pInputText
+            id="numeroInicial"
+            type="number"
+            step="1"
+            inputmode="numeric"
+            [formField]="numeroForm.numeroInicial"
+          />
+          @if (numeroForm.numeroInicial().touched() && numeroForm.numeroInicial().errors().length) {
+            <small class="text-red-500">
+              {{ numeroForm.numeroInicial().errors()[0].message }}
+            </small>
+          }
+        </div>
+
+        <div class="flex justify-content-end">
+          <p-button
+            type="submit"
+            [label]="configuracion() ? 'Reiniciar numeración' : 'Guardar'"
+            [loading]="guardando()"
+            [disabled]="guardando()"
+          />
+        </div>
+      </form>
+    </div>
+  </p-card>
+</div>
+
+<p-toast />
+<p-confirmdialog />

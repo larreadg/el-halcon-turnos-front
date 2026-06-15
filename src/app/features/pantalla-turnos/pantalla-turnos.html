@@ -1,0 +1,68 @@
+<div class="h-screen w-screen flex flex-column gap-3 p-4 surface-ground overflow-hidden">
+  <img src="/logo1.png" alt="El Halcón Ferretería" class="fixed top-0 left-0 m-3 h-5rem z-5" />
+
+  <header class="text-center flex-shrink-0">
+    <h1 class="text-4xl font-bold m-0 text-primary">Ahora atendiendo</h1>
+  </header>
+
+  <main class="flex-1 min-h-0 flex align-items-center justify-content-center overflow-hidden">
+    @if (cargando()) {
+      <p class="text-2xl text-color-secondary">Cargando...</p>
+    } @else if (llamando().length === 0) {
+      <p class="text-3xl text-color-secondary text-center">Esperando próximo turno...</p>
+    } @else if (llamando().length === 1) {
+      <div class="w-full md:w-6 p-3">
+        <ng-container
+          [ngTemplateOutlet]="tarjetaTurno"
+          [ngTemplateOutletContext]="{ turno: llamando()[0] }"
+        ></ng-container>
+      </div>
+    } @else {
+      <p-carousel
+        [value]="llamando()"
+        [numVisible]="2"
+        [numScroll]="1"
+        [circular]="true"
+        [autoplayInterval]="10000"
+        [showIndicators]="false"
+        [showNavigators]="false"
+        styleClass="w-full"
+      >
+        <ng-template #item let-turno>
+          <div class="p-3 h-full">
+            <ng-container
+              [ngTemplateOutlet]="tarjetaTurno"
+              [ngTemplateOutletContext]="{ turno: turno }"
+            ></ng-container>
+          </div>
+        </ng-template>
+      </p-carousel>
+    }
+  </main>
+
+  <ng-template #tarjetaTurno let-turno="turno">
+    <div
+      class="surface-card border-round-2xl shadow-4 p-5 h-full flex flex-column align-items-center justify-content-center gap-3"
+    >
+      <span class="text-color-secondary text-xl">Turno</span>
+      <span class="text-8xl font-bold text-primary">N° {{ turno.numero }}</span>
+      <span class="text-3xl font-semibold text-center">{{ etiqueta(turno) }}</span>
+    </div>
+  </ng-template>
+
+  <footer class="flex flex-column gap-2 flex-shrink-0">
+    <h2 class="text-xl font-semibold m-0 text-color-secondary">Últimos atendidos</h2>
+    @if (ultimosFinalizados().length === 0) {
+      <p class="text-color-secondary m-0">Todavía no se atendieron turnos hoy.</p>
+    } @else {
+      <div class="flex flex-wrap gap-3">
+        @for (turno of ultimosFinalizados(); track turno.id) {
+          <div class="surface-card border-round p-3 flex align-items-center gap-3">
+            <span class="text-2xl font-bold text-primary">N° {{ turno.numero }}</span>
+            <span class="text-color-secondary text-lg">{{ etiqueta(turno) }}</span>
+          </div>
+        }
+      </div>
+    }
+  </footer>
+</div>

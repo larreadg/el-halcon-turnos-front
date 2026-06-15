@@ -1,0 +1,16 @@
+// Hover/active states for nav links — not covered by PrimeFlex utilities
+.halcon-nav-item {
+  color: var(--p-text-color);
+  transition: background-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: var(--p-content-hover-background);
+    color: var(--p-content-hover-color);
+  }
+}
+
+.halcon-nav-active {
+  background: var(--p-highlight-background);
+  color: var(--p-primary-color);
+  font-weight: 600;
+}
