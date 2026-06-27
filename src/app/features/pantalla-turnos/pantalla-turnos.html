@@ -1,11 +1,11 @@
-<div class="h-screen w-screen flex flex-column gap-3 p-4 surface-ground overflow-hidden">
+<div class="flex flex-column gap-3 p-4 surface-ground overflow-hidden" style="position:fixed;inset:0">
   <img src="/logo1.png" alt="El Halcón Ferretería" class="fixed top-0 left-0 m-3 h-5rem z-5" />
 
   <header class="text-center flex-shrink-0">
     <h1 class="text-4xl font-bold m-0 text-primary">Ahora atendiendo</h1>
   </header>
 
-  <main class="flex-1 min-h-0 flex align-items-center justify-content-center overflow-hidden">
+  <main class="flex-1 min-h-0 flex align-items-center justify-content-center">
     @if (cargando()) {
       <p class="text-2xl text-color-secondary">Cargando...</p>
     } @else if (llamando().length === 0) {
@@ -42,7 +42,7 @@
 
   <ng-template #tarjetaTurno let-turno="turno">
     <div
-      class="surface-card border-round-2xl shadow-4 p-5 h-full flex flex-column align-items-center justify-content-center gap-3"
+      class="surface-card border-round-2xl shadow-4 p-5 flex flex-column align-items-center justify-content-center gap-3"
     >
       <span class="text-color-secondary text-xl">Turno</span>
       <span class="text-8xl font-bold text-primary">N° {{ turno.numero }}</span>

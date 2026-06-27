@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.elhalconturnos.com/api',
+  apiUrl: 'https://seguridad.personal.com.py/eht/api',
 };

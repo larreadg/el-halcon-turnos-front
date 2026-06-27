@@ -20,6 +20,7 @@ const TICKETS_AUDIO_URL = `${environment.apiUrl.replace(/\/api\/?$/, '')}/storag
   selector: 'app-pantalla-turnos',
   imports: [CarouselModule, NgTemplateOutlet],
   templateUrl: './pantalla-turnos.html',
+  styleUrl: './pantalla-turnos.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PantallaTurnos implements OnInit {
@@ -63,6 +64,10 @@ export class PantallaTurnos implements OnInit {
 
         for (const turno of llamando) {
           this.idsAnunciados.add(turno.id);
+        }
+
+        for (const turno of respuesta.data?.llamarNuevamente ?? []) {
+          this.anunciar(turno);
         }
 
         this.llamando.set(llamando);

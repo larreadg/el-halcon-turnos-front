@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { FormField, form, min, required, submit } from '@angular/forms/signals';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
+import { DividerModule } from 'primeng/divider';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { ToastModule } from 'primeng/toast';
@@ -19,6 +20,7 @@ import { TurnoConfiguracion } from '../../core/models/turno-configuracion.model'
     FormField,
     ButtonModule,
     CardModule,
+    DividerModule,
     InputTextModule,
     MessageModule,
     ToastModule,
@@ -36,6 +38,8 @@ export class TurnosConfiguracion implements OnInit {
   protected readonly configuracion = signal<TurnoConfiguracion | null>(null);
   protected readonly cargando = signal(false);
   protected readonly guardando = signal(false);
+  protected readonly actualizando = signal(false);
+  protected readonly finalizando = signal(false);
 
   protected readonly numeroModel = signal({ numeroInicial: 1 });
 
@@ -68,6 +72,25 @@ export class TurnosConfiguracion implements OnInit {
         }
 
         this.mostrarError(error, 'No se pudo obtener la configuración de turnos.');
+      },
+    });
+  }
+
+  protected actualizarNumeroActual(): void {
+    this.actualizando.set(true);
+
+    this.turnosConfiguracionService.obtener().subscribe({
+      next: (respuesta) => {
+        if (respuesta.data) {
+          this.configuracion.update((cfg) =>
+            cfg ? { ...cfg, numero_actual: respuesta.data!.numero_actual } : respuesta.data,
+          );
+        }
+        this.actualizando.set(false);
+      },
+      error: (error: unknown) => {
+        this.actualizando.set(false);
+        this.mostrarError(error, 'No se pudo actualizar el número actual.');
       },
     });
   }
@@ -121,6 +144,41 @@ export class TurnosConfiguracion implements OnInit {
     } finally {
       this.guardando.set(false);
     }
+  }
+
+  protected finalizarTodos(): void {
+    this.confirmationService.confirm({
+      header: 'Finalizar todos los turnos',
+      message:
+        '¿Finalizás todos los turnos en estado "llamado" del día de hoy? Esta acción no se puede deshacer.',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Finalizar todos',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.ejecutarFinalizarTodos();
+      },
+    });
+  }
+
+  private ejecutarFinalizarTodos(): void {
+    this.finalizando.set(true);
+
+    this.turnosConfiguracionService.finalizarTodos().subscribe({
+      next: (respuesta) => {
+        const count = respuesta.data?.finalizados ?? 0;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Turnos finalizados',
+          detail: count === 1 ? 'Se finalizó 1 turno.' : `Se finalizaron ${count} turnos.`,
+        });
+        this.finalizando.set(false);
+      },
+      error: (error: unknown) => {
+        this.finalizando.set(false);
+        this.mostrarError(error, 'No se pudieron finalizar los turnos.');
+      },
+    });
   }
 
   private mostrarError(error: unknown, fallback: string): void {

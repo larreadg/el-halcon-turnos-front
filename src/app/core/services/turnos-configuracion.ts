@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../models/api-response.model';
 import {
+  FinalizarTodosResponse,
   GuardarTurnoConfiguracionRequest,
   GuardarTurnoConfiguracionResponse,
   TurnoConfiguracion,
@@ -30,6 +31,13 @@ export class TurnosConfiguracion {
     return this.http.post<ApiResponse<GuardarTurnoConfiguracionResponse>>(
       `${this.apiUrl}/turnos/configuracion`,
       datos,
+    );
+  }
+
+  finalizarTodos(): Observable<ApiResponse<FinalizarTodosResponse>> {
+    return this.http.post<ApiResponse<FinalizarTodosResponse>>(
+      `${this.apiUrl}/turnos/finalizar-todos`,
+      {},
     );
   }
 }

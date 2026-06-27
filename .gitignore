@@ -49,3 +49,5 @@ Thumbs.db
 .vscode/
 
 CLAUDE.md
+# Local Netlify folder
+.netlify

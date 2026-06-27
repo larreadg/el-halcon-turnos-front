@@ -7,20 +7,37 @@
     </p>
   </div>
 
-  <p-card styleClass="w-full md:w-30rem">
+  <p-card styleClass="w-full md:w-30rem" header="Numeración">
     <div class="flex flex-column gap-3">
       @if (cargando()) {
         <p class="text-color-secondary m-0">Cargando configuración...</p>
       } @else if (configuracion()) {
-        <div class="flex flex-column gap-1">
-          <span class="text-color-secondary text-sm">Estado actual</span>
-          <span class="text-xl font-bold">
-            Numeración activa desde N° {{ configuracion()!.numero_inicial }}
-          </span>
-          <span class="text-color-secondary text-sm">Fecha: {{ configuracion()!.fecha }}</span>
-          <span class="text-color-secondary text-sm">
-            Configurado el: {{ configuracion()!.creado_el }}
-          </span>
+        <div class="flex flex-column gap-3">
+          <div class="flex align-items-center justify-content-between">
+            <div class="flex flex-column gap-1">
+              <span class="text-color-secondary text-sm">Número actual</span>
+              <span class="text-4xl font-bold text-primary">
+                N° {{ configuracion()!.numero_actual }}
+              </span>
+            </div>
+            <p-button
+              icon="pi pi-refresh"
+              [text]="true"
+              severity="secondary"
+              [rounded]="true"
+              [loading]="actualizando()"
+              aria-label="Actualizar número actual"
+              (onClick)="actualizarNumeroActual()"
+            />
+          </div>
+          <p-divider styleClass="my-0" />
+          <div class="flex flex-column gap-1">
+            <span class="text-color-secondary text-sm">Numeración iniciada desde N° {{ configuracion()!.numero_inicial }}</span>
+            <span class="text-color-secondary text-sm">Fecha: {{ configuracion()!.fecha }}</span>
+            <span class="text-color-secondary text-sm">
+              Configurado el: {{ configuracion()!.creado_el }}
+            </span>
+          </div>
         </div>
       } @else {
         <p-message
@@ -56,6 +73,26 @@
           />
         </div>
       </form>
+    </div>
+  </p-card>
+
+  <p-card styleClass="w-full md:w-30rem" header="Limpieza">
+    <div class="flex flex-column gap-3">
+      <p class="text-color-secondary text-sm m-0">
+        Finaliza todos los turnos en estado "llamado" del día de hoy. Usá esto para limpiar la
+        pantalla al cierre del día o ante cualquier inconsistencia.
+      </p>
+      <div class="flex justify-content-end">
+        <p-button
+          label="Finalizar todos los pendientes"
+          icon="pi pi-times-circle"
+          severity="danger"
+          [outlined]="true"
+          [loading]="finalizando()"
+          [disabled]="finalizando()"
+          (onClick)="finalizarTodos()"
+        />
+      </div>
     </div>
   </p-card>
 </div>

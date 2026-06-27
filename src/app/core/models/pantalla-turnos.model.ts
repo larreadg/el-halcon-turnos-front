@@ -19,4 +19,5 @@ export interface TurnoFinalizado {
 export interface PantallaTurnos {
   llamando: TurnoLlamando[];
   ultimos_finalizados: TurnoFinalizado[];
+  llamarNuevamente: TurnoLlamando[];
 }
