@@ -1,0 +1,181 @@
+<div class="flex flex-column gap-4">
+  <div class="flex flex-column sm:flex-row sm:align-items-center sm:justify-content-between gap-2">
+    <div>
+      <h1 class="text-2xl font-bold m-0">Boxes</h1>
+      <p class="text-color-secondary mt-1 mb-0">Administrá los boxes de atención.</p>
+    </div>
+    <p-button label="Nuevo box" icon="pi pi-plus" (onClick)="abrirCrear()" />
+  </div>
+
+  <p-table
+    [value]="boxes()"
+    [loading]="cargando()"
+    dataKey="id"
+    styleClass="surface-card border-round shadow-1"
+  >
+    <ng-template #header>
+      <tr>
+        <th>Usuario</th>
+        <th>Puesto</th>
+        <th>Estado</th>
+        <th>Creado</th>
+        <th>Modificado</th>
+        <th class="w-10rem"></th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-box>
+      <tr>
+        <td>{{ box.usuario }}</td>
+        <td>{{ box.puesto ?? '—' }}</td>
+        <td>
+          <p-tag
+            [value]="box.activo ? 'Activo' : 'Inactivo'"
+            [severity]="box.activo ? 'success' : 'danger'"
+          />
+        </td>
+        <td>{{ box.creado_el }}</td>
+        <td>{{ box.modificado_el ?? '—' }}</td>
+        <td>
+          <div class="flex gap-1 justify-content-end">
+            <p-button
+              icon="pi pi-pencil"
+              [text]="true"
+              severity="secondary"
+              ariaLabel="Editar"
+              (onClick)="abrirEditar(box)"
+            />
+            <p-button
+              icon="pi pi-key"
+              [text]="true"
+              severity="secondary"
+              [loading]="reseteando() === box.id"
+              ariaLabel="Resetear contraseña"
+              (onClick)="confirmarResetearClave(box)"
+            />
+            <p-button
+              icon="pi pi-trash"
+              [text]="true"
+              severity="danger"
+              ariaLabel="Eliminar"
+              (onClick)="confirmarEliminar(box)"
+            />
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="6" class="text-center text-color-secondary py-4">
+          No hay boxes registrados.
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog
+  [visible]="dialogVisible()"
+  (visibleChange)="dialogVisible.set($event)"
+  [modal]="true"
+  [header]="modo() === 'crear' ? 'Nuevo box' : 'Editar box'"
+  styleClass="w-full md:w-30rem"
+>
+  <form class="flex flex-column gap-3" (submit)="onSubmit(); $event.preventDefault()">
+    <div class="flex flex-column gap-2">
+      <label for="puesto">Nombre del box</label>
+      <input
+        pInputText
+        id="puesto"
+        type="text"
+        autocomplete="off"
+        placeholder="Caja 1"
+        [formField]="boxForm.puesto"
+      />
+      @if (boxForm.puesto().touched() && boxForm.puesto().errors().length) {
+        <small class="text-red-500">{{ boxForm.puesto().errors()[0].message }}</small>
+      }
+    </div>
+
+    @if (errorMensaje()) {
+      <p-message severity="error" [text]="errorMensaje()!" />
+    }
+
+    <div class="flex justify-content-end gap-2 mt-2">
+      <p-button
+        type="button"
+        label="Cancelar"
+        [text]="true"
+        severity="secondary"
+        (onClick)="cerrarDialog()"
+      />
+      <p-button type="submit" label="Guardar" [loading]="guardando()" [disabled]="guardando()" />
+    </div>
+  </form>
+</p-dialog>
+
+<p-dialog
+  [visible]="credencialesDialogVisible()"
+  (visibleChange)="credencialesDialogVisible.set($event)"
+  [modal]="true"
+  [closable]="false"
+  header="Credenciales generadas"
+  styleClass="w-full md:w-30rem"
+>
+  @if (credencialesGeneradas()) {
+    <div class="flex flex-column gap-3">
+      <p-message
+        severity="warn"
+        text="Guardá estos datos ahora: la contraseña no se podrá volver a ver."
+      />
+
+      <div class="flex flex-column gap-2">
+        <label for="credUsuario">Usuario</label>
+        <div class="flex align-items-center gap-2">
+          <input
+            pInputText
+            id="credUsuario"
+            type="text"
+            readonly
+            class="flex-1"
+            [value]="credencialesGeneradas()!.usuario"
+          />
+          <p-button
+            icon="pi pi-copy"
+            [text]="true"
+            severity="secondary"
+            ariaLabel="Copiar usuario"
+            (onClick)="copiar(credencialesGeneradas()!.usuario)"
+          />
+        </div>
+      </div>
+
+      <div class="flex flex-column gap-2">
+        <label for="credClave">Contraseña</label>
+        <div class="flex align-items-center gap-2">
+          <input
+            pInputText
+            id="credClave"
+            type="text"
+            readonly
+            class="flex-1"
+            [value]="credencialesGeneradas()!.clave"
+          />
+          <p-button
+            icon="pi pi-copy"
+            [text]="true"
+            severity="secondary"
+            ariaLabel="Copiar contraseña"
+            (onClick)="copiar(credencialesGeneradas()!.clave)"
+          />
+        </div>
+      </div>
+    </div>
+  }
+
+  <div class="flex justify-content-end mt-3">
+    <p-button label="Listo" (onClick)="cerrarCredenciales()" />
+  </div>
+</p-dialog>
+
+<p-toast />
+<p-confirmdialog />

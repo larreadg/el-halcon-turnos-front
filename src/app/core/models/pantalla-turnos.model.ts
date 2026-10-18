@@ -5,6 +5,7 @@ export interface TurnoLlamando {
   nombres: string;
   apellidos: string;
   puesto: string | null;
+  box_numero: number | null;
 }
 
 export interface TurnoFinalizado {

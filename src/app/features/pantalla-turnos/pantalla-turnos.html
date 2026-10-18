@@ -18,25 +18,21 @@
         ></ng-container>
       </div>
     } @else {
-      <p-carousel
-        [value]="llamando()"
-        [numVisible]="2"
-        [numScroll]="1"
-        [circular]="true"
-        [autoplayInterval]="10000"
-        [showIndicators]="false"
-        [showNavigators]="false"
-        styleClass="w-full"
-      >
-        <ng-template #item let-turno>
-          <div class="p-3 h-full">
-            <ng-container
-              [ngTemplateOutlet]="tarjetaTurno"
-              [ngTemplateOutletContext]="{ turno: turno }"
-            ></ng-container>
-          </div>
-        </ng-template>
-      </p-carousel>
+      <div class="overflow-hidden w-full">
+        <div
+          class="llamando-track"
+          [style.animation-duration]="llamandoCarouselDuration()"
+        >
+          @for (turno of llamandoCarousel(); track $index) {
+            <div class="llamando-item p-3">
+              <ng-container
+                [ngTemplateOutlet]="tarjetaTurno"
+                [ngTemplateOutletContext]="{ turno: turno }"
+              ></ng-container>
+            </div>
+          }
+        </div>
+      </div>
     }
   </main>
 
@@ -46,23 +42,24 @@
     >
       <span class="text-color-secondary text-xl">Turno</span>
       <span class="text-8xl font-bold text-primary">N° {{ turno.numero }}</span>
-      <span class="text-3xl font-semibold text-center">{{ etiqueta(turno) }}</span>
+      <div
+        class="border-round-2xl px-5 py-2 text-3xl font-bold text-center"
+        style="background: var(--p-primary-color); color: var(--p-primary-contrast-color)"
+      >
+        {{ etiqueta(turno) }}
+      </div>
     </div>
   </ng-template>
 
-  <footer class="flex flex-column gap-2 flex-shrink-0">
-    <h2 class="text-xl font-semibold m-0 text-color-secondary">Últimos atendidos</h2>
-    @if (ultimosFinalizados().length === 0) {
-      <p class="text-color-secondary m-0">Todavía no se atendieron turnos hoy.</p>
-    } @else {
-      <div class="flex flex-wrap gap-3">
-        @for (turno of ultimosFinalizados(); track turno.id) {
-          <div class="surface-card border-round p-3 flex align-items-center gap-3">
-            <span class="text-2xl font-bold text-primary">N° {{ turno.numero }}</span>
-            <span class="text-color-secondary text-lg">{{ etiqueta(turno) }}</span>
-          </div>
-        }
+
+  @if (turnoAnunciado(); as turno) {
+    <div class="turno-modal">
+      <img src="/logo1.png" alt="El Halcón Ferretería" class="turno-modal__logo" />
+      <div class="turno-modal__body">
+        <span class="turno-modal__label">Turno</span>
+        <span class="turno-modal__numero">N° {{ turno.numero }}</span>
+        <div class="turno-modal__box">{{ etiqueta(turno) }}</div>
       </div>
-    }
-  </footer>
+    </div>
+  }
 </div>

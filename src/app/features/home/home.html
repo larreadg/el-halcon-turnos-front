@@ -1,1 +1,43 @@
-<h1 class="text-2xl font-bold m-0">Hola, {{ authService.usuario() }}</h1>
+<div class="flex flex-column gap-4">
+  <h1 class="text-2xl font-bold m-0">Hola, {{ authService.usuario() }}</h1>
+
+  <div class="grid">
+    <!-- Card: Boxes -->
+    <div class="col-12 sm:col-6 lg:col-4">
+      <div class="surface-card border-round shadow-1 p-4 flex flex-column gap-3">
+        <div class="flex align-items-center justify-content-between">
+          <span class="text-color-secondary font-medium">Boxes activos</span>
+          <span class="flex align-items-center justify-content-center w-3rem h-3rem border-round-lg bg-primary-50">
+            <i class="pi pi-desktop text-primary text-xl"></i>
+          </span>
+        </div>
+        @if (cargandoBoxes()) {
+          <p-skeleton height="2.5rem" width="6rem" />
+        } @else {
+          <span class="text-4xl font-bold">
+            {{ cantidadBoxes() !== null ? cantidadBoxes() : '—' }}
+          </span>
+        }
+      </div>
+    </div>
+
+    <!-- Card: Numeración actual -->
+    <div class="col-12 sm:col-6 lg:col-4">
+      <div class="surface-card border-round shadow-1 p-4 flex flex-column gap-3">
+        <div class="flex align-items-center justify-content-between">
+          <span class="text-color-secondary font-medium">Turno actual del día</span>
+          <span class="flex align-items-center justify-content-center w-3rem h-3rem border-round-lg bg-primary-50">
+            <i class="pi pi-ticket text-primary text-xl"></i>
+          </span>
+        </div>
+        @if (cargandoTurnos()) {
+          <p-skeleton height="2.5rem" width="6rem" />
+        } @else {
+          <span class="text-4xl font-bold">
+            {{ numeracionActual() !== null ? numeracionActual() : '—' }}
+          </span>
+        }
+      </div>
+    </div>
+  </div>
+</div>

@@ -4,21 +4,22 @@ import {
   Component,
   DestroyRef,
   OnInit,
+  computed,
   inject,
   signal,
 } from '@angular/core';
-import { CarouselModule } from 'primeng/carousel';
 
 import { environment } from '../../../environments/environment';
 import { PantallaTurnosService } from '../../core/services/pantalla-turnos';
-import { TurnoFinalizado, TurnoLlamando } from '../../core/models/pantalla-turnos.model';
+import { TurnoLlamando } from '../../core/models/pantalla-turnos.model';
 
 const INTERVALO_ACTUALIZACION_MS = 10000;
 const TICKETS_AUDIO_URL = `${environment.apiUrl.replace(/\/api\/?$/, '')}/storage/tickets`;
+const BOXES_AUDIO_URL = `${environment.apiUrl.replace(/\/api\/?$/, '')}/storage/boxes`;
 
 @Component({
   selector: 'app-pantalla-turnos',
-  imports: [CarouselModule, NgTemplateOutlet],
+  imports: [NgTemplateOutlet],
   templateUrl: './pantalla-turnos.html',
   styleUrl: './pantalla-turnos.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -28,10 +29,19 @@ export class PantallaTurnos implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly llamando = signal<TurnoLlamando[]>([]);
-  protected readonly ultimosFinalizados = signal<TurnoFinalizado[]>([]);
   protected readonly cargando = signal(true);
+  protected readonly turnoAnunciado = signal<TurnoLlamando | null>(null);
 
-  private readonly idsAnunciados = new Set<number>();
+  protected readonly llamandoCarousel = computed(() => {
+    const items = this.llamando();
+    return items.length > 1 ? [...items, ...items] : items;
+  });
+
+  protected readonly llamandoCarouselDuration = computed(() =>
+    `${this.llamando().length * 6}s`,
+  );
+
+  private idsEnLlamando = new Set<number>();
   private readonly colaAnuncios: TurnoLlamando[] = [];
   private primeraCarga = true;
   private anunciandoEnCurso = false;
@@ -43,7 +53,7 @@ export class PantallaTurnos implements OnInit {
     this.destroyRef.onDestroy(() => clearInterval(intervalo));
   }
 
-  protected etiqueta(turno: TurnoLlamando | TurnoFinalizado): string {
+  protected etiqueta(turno: TurnoLlamando): string {
     return turno.puesto ?? `${turno.nombres} ${turno.apellidos}`;
   }
 
@@ -56,22 +66,19 @@ export class PantallaTurnos implements OnInit {
           this.primeraCarga = false;
         } else {
           for (const turno of llamando) {
-            if (!this.idsAnunciados.has(turno.id)) {
+            if (!this.idsEnLlamando.has(turno.id)) {
               this.anunciar(turno);
             }
           }
         }
 
-        for (const turno of llamando) {
-          this.idsAnunciados.add(turno.id);
-        }
+        this.idsEnLlamando = new Set(llamando.map((t) => t.id));
 
         for (const turno of respuesta.data?.llamarNuevamente ?? []) {
           this.anunciar(turno);
         }
 
         this.llamando.set(llamando);
-        this.ultimosFinalizados.set(respuesta.data?.ultimos_finalizados ?? []);
         this.cargando.set(false);
       },
       error: () => {
@@ -96,31 +103,15 @@ export class PantallaTurnos implements OnInit {
     }
 
     this.anunciandoEnCurso = true;
+    this.turnoAnunciado.set(turno);
 
     const continuar = () => {
       this.anunciandoEnCurso = false;
+      this.turnoAnunciado.set(null);
       this.procesarColaAnuncios();
     };
 
-    let campanaResuelta = false;
-    const reproducirTicket = () => {
-      if (campanaResuelta) {
-        return;
-      }
-      campanaResuelta = true;
-
-      this.reproducirAudioTicket(turno, continuar);
-    };
-
-    if (typeof Audio === 'undefined') {
-      reproducirTicket();
-      return;
-    }
-
-    const campana = new Audio('/bell.mp3');
-    campana.addEventListener('ended', reproducirTicket, { once: true });
-    campana.addEventListener('error', reproducirTicket, { once: true });
-    campana.play().catch(reproducirTicket);
+    this.reproducirAudioTicket(turno, () => this.reproducirAudioBox(turno, continuar));
   }
 
   private reproducirAudioTicket(turno: TurnoLlamando, continuar: () => void): void {
@@ -152,6 +143,25 @@ export class PantallaTurnos implements OnInit {
     );
     audioTicket.addEventListener('error', usarVoz, { once: true });
     audioTicket.play().catch(usarVoz);
+  }
+
+  private reproducirAudioBox(turno: TurnoLlamando, continuar: () => void): void {
+    if (!turno.box_numero || typeof Audio === 'undefined') {
+      continuar();
+      return;
+    }
+
+    let resuelto = false;
+    const resolver = () => {
+      if (resuelto) return;
+      resuelto = true;
+      continuar();
+    };
+
+    const audioBox = new Audio(`${BOXES_AUDIO_URL}/box_${turno.box_numero}.mp3`);
+    audioBox.addEventListener('ended', resolver, { once: true });
+    audioBox.addEventListener('error', resolver, { once: true });
+    audioBox.play().catch(resolver);
   }
 
   private anunciarConVoz(turno: TurnoLlamando, continuar: () => void): void {
