@@ -11,23 +11,30 @@ import {
 
 import { environment } from '../../../environments/environment';
 import { PantallaTurnosService } from '../../core/services/pantalla-turnos';
+import { Promociones } from '../../core/services/promociones';
 import { TurnoLlamando } from '../../core/models/pantalla-turnos.model';
+import { PromocionPantalla } from '../../core/models/promocion.model';
+import { PromocionesCarrusel } from './promociones-carrusel/promociones-carrusel';
+import { FranjaTurnos } from './franja-turnos/franja-turnos';
 
 const INTERVALO_ACTUALIZACION_MS = 10000;
+const INTERVALO_PROMOCIONES_MS = 60000;
 const TICKETS_AUDIO_URL = `${environment.apiUrl.replace(/\/api\/?$/, '')}/storage/tickets`;
 const BOXES_AUDIO_URL = `${environment.apiUrl.replace(/\/api\/?$/, '')}/storage/boxes`;
 
 @Component({
   selector: 'app-pantalla-turnos',
-  imports: [NgTemplateOutlet],
+  imports: [NgTemplateOutlet, PromocionesCarrusel, FranjaTurnos],
   templateUrl: './pantalla-turnos.html',
   styleUrl: './pantalla-turnos.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PantallaTurnos implements OnInit {
   private readonly pantallaService = inject(PantallaTurnosService);
+  private readonly promocionesService = inject(Promociones);
   private readonly destroyRef = inject(DestroyRef);
 
+  protected readonly promociones = signal<PromocionPantalla[]>([]);
   protected readonly llamando = signal<TurnoLlamando[]>([]);
   protected readonly cargando = signal(true);
   protected readonly turnoAnunciado = signal<TurnoLlamando | null>(null);
@@ -37,9 +44,7 @@ export class PantallaTurnos implements OnInit {
     return items.length > 1 ? [...items, ...items] : items;
   });
 
-  protected readonly llamandoCarouselDuration = computed(() =>
-    `${this.llamando().length * 6}s`,
-  );
+  protected readonly llamandoCarouselDuration = computed(() => `${this.llamando().length * 6}s`);
 
   private idsEnLlamando = new Set<number>();
   private readonly colaAnuncios: TurnoLlamando[] = [];
@@ -49,8 +54,25 @@ export class PantallaTurnos implements OnInit {
   ngOnInit(): void {
     this.actualizar();
 
+    this.actualizarPromociones();
+
     const intervalo = setInterval(() => this.actualizar(), INTERVALO_ACTUALIZACION_MS);
-    this.destroyRef.onDestroy(() => clearInterval(intervalo));
+    const intervaloPromociones = setInterval(
+      () => this.actualizarPromociones(),
+      INTERVALO_PROMOCIONES_MS,
+    );
+    this.destroyRef.onDestroy(() => {
+      clearInterval(intervalo);
+      clearInterval(intervaloPromociones);
+    });
+  }
+
+  private actualizarPromociones(): void {
+    this.promocionesService.listarPantalla().subscribe({
+      next: (respuesta) => this.promociones.set(respuesta.data ?? []),
+      // Si falla, se mantienen las promociones que ya se estaban mostrando
+      error: () => undefined,
+    });
   }
 
   protected etiqueta(turno: TurnoLlamando): string {

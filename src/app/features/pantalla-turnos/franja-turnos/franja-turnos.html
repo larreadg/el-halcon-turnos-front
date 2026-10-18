@@ -1,0 +1,27 @@
+<img src="/logo1.png" alt="El Halcón Ferretería" class="franja__logo" />
+
+<div class="franja__titulo">
+  <span>Ahora</span>
+  <span>atendiendo</span>
+</div>
+
+<div class="franja__lista">
+  @if (cargando()) {
+    <span class="franja__vacio">Cargando...</span>
+  } @else if (llamando().length === 0) {
+    <span class="franja__vacio">Esperando próximo turno...</span>
+  } @else {
+    <div
+      class="franja__track"
+      [class.franja__track--desplazar]="desplazar()"
+      [style.animation-duration]="duracionDesplazamiento()"
+    >
+      @for (turno of turnosVisibles(); track $index) {
+        <div class="turno-chip">
+          <span class="turno-chip__numero">N° {{ turno.numero }}</span>
+          <span class="turno-chip__box">{{ etiqueta(turno) }}</span>
+        </div>
+      }
+    </div>
+  }
+</div>

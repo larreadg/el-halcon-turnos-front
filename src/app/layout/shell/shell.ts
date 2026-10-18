@@ -39,6 +39,7 @@ export class Shell {
     { label: 'Inicio', icon: 'pi pi-home', route: '/home' },
     { label: 'Boxes', icon: 'pi pi-desktop', route: '/boxes' },
     { label: 'Turnos', icon: 'pi pi-ticket', route: '/turnos-configuracion' },
+    { label: 'Promociones', icon: 'pi pi-images', route: '/promociones' },
   ];
 
   protected cerrarSidebar(): void {
