@@ -114,6 +114,9 @@ export class Promociones implements OnInit {
   protected readonly guardando = signal(false);
   protected readonly progreso = signal<number | null>(null);
   protected readonly cambiandoEstado = signal<number | null>(null);
+  /** Promociones marcadas en la tabla para activar/desactivar juntas. */
+  protected readonly seleccion = signal<Promocion[]>([]);
+  protected readonly cambiandoEstadoSeleccion = signal<'activar' | 'desactivar' | null>(null);
   protected readonly dialogVisible = signal(false);
   protected readonly modo = signal<Modo>('crear');
   protected readonly errorMensaje = signal<string | null>(null);
@@ -220,7 +223,11 @@ export class Promociones implements OnInit {
 
     this.promocionesService.listar().subscribe({
       next: (respuesta) => {
-        this.promociones.set(respuesta.data ?? []);
+        const promociones = respuesta.data ?? [];
+        this.promociones.set(promociones);
+        // Conservar la selección de las que siguen existiendo, con sus datos actualizados
+        const seleccionados = new Set(this.seleccion().map((p) => p.id));
+        this.seleccion.set(promociones.filter((p) => seleccionados.has(p.id)));
         this.cargando.set(false);
       },
       error: (error: unknown) => {
@@ -538,6 +545,33 @@ export class Promociones implements OnInit {
       error: (error: unknown) => {
         this.cambiandoEstado.set(null);
         this.mostrarError(error, 'No se pudo cambiar el estado de la promoción.');
+      },
+    });
+  }
+
+  protected cambiarEstadoSeleccion(activo: boolean): void {
+    const ids = this.seleccion().map((p) => p.id);
+    if (!ids.length) return;
+
+    this.cambiandoEstadoSeleccion.set(activo ? 'activar' : 'desactivar');
+
+    this.promocionesService.cambiarEstado(ids, activo).subscribe({
+      next: () => {
+        this.cambiandoEstadoSeleccion.set(null);
+        this.messageService.add({
+          severity: 'success',
+          summary: activo ? 'Promociones activadas' : 'Promociones desactivadas',
+          detail:
+            ids.length === 1
+              ? `Se ${activo ? 'activó' : 'desactivó'} 1 promoción.`
+              : `Se ${activo ? 'activaron' : 'desactivaron'} ${ids.length} promociones.`,
+        });
+        this.seleccion.set([]);
+        this.cargarPromociones();
+      },
+      error: (error: unknown) => {
+        this.cambiandoEstadoSeleccion.set(null);
+        this.mostrarError(error, 'No se pudo cambiar el estado de las promociones.');
       },
     });
   }

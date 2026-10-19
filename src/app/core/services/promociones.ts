@@ -48,6 +48,14 @@ export class Promociones {
     return this.http.put<ApiResponse<null>>(`${this.apiUrl}/promociones/${id}`, datos);
   }
 
+  /** Activa o desactiva varias promociones a la vez. */
+  cambiarEstado(ids: number[], activo: boolean): Observable<ApiResponse<{ modificadas: number }>> {
+    return this.http.put<ApiResponse<{ modificadas: number }>>(
+      `${this.apiUrl}/promociones/estado`,
+      { ids, activo },
+    );
+  }
+
   eliminar(id: number): Observable<ApiResponse<null>> {
     return this.http.delete<ApiResponse<null>>(`${this.apiUrl}/promociones/${id}`);
   }

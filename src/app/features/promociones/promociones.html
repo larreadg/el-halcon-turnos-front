@@ -9,14 +9,55 @@
     <p-button label="Nueva promoción" icon="pi pi-plus" (onClick)="abrirCrear()" />
   </div>
 
+  @if (seleccion().length) {
+    <div
+      class="surface-card border-round shadow-1 px-3 py-2 flex flex-column sm:flex-row sm:align-items-center sm:justify-content-between gap-2"
+    >
+      <span class="font-medium">
+        {{ seleccion().length }}
+        {{ seleccion().length === 1 ? 'promoción seleccionada' : 'promociones seleccionadas' }}
+      </span>
+      <div class="flex flex-wrap gap-2">
+        <p-button
+          label="Activar"
+          icon="pi pi-eye"
+          severity="success"
+          [outlined]="true"
+          [loading]="cambiandoEstadoSeleccion() === 'activar'"
+          [disabled]="cambiandoEstadoSeleccion() !== null"
+          (onClick)="cambiarEstadoSeleccion(true)"
+        />
+        <p-button
+          label="Desactivar"
+          icon="pi pi-eye-slash"
+          severity="danger"
+          [outlined]="true"
+          [loading]="cambiandoEstadoSeleccion() === 'desactivar'"
+          [disabled]="cambiandoEstadoSeleccion() !== null"
+          (onClick)="cambiarEstadoSeleccion(false)"
+        />
+        <p-button
+          label="Quitar selección"
+          [text]="true"
+          severity="secondary"
+          [disabled]="cambiandoEstadoSeleccion() !== null"
+          (onClick)="seleccion.set([])"
+        />
+      </div>
+    </div>
+  }
+
   <p-table
     [value]="promociones()"
     [loading]="cargando()"
     dataKey="id"
+    [selection]="seleccion()"
+    (selectionChange)="seleccion.set($event)"
     styleClass="surface-card border-round shadow-1"
   >
     <ng-template #header>
       <tr>
+        <th class="w-3rem"><p-tableHeaderCheckbox /></th>
         <th class="w-8rem">Vista previa</th>
         <th>Título</th>
         <th>Contenido</th>
@@ -29,6 +70,7 @@
     </ng-template>
     <ng-template #body let-promocion>
       <tr>
+        <td><p-tableCheckbox [value]="promocion" /></td>
         <td>
           <button
             type="button"
@@ -106,7 +148,7 @@
     </ng-template>
     <ng-template #emptymessage>
       <tr>
-        <td colspan="8" class="text-center text-color-secondary py-4">
+        <td colspan="9" class="text-center text-color-secondary py-4">
           No hay promociones cargadas.
         </td>
       </tr>
