@@ -15,6 +15,7 @@ export interface TurnoFinalizado {
   nombres: string;
   apellidos: string;
   puesto: string | null;
+  box_numero: number | null;
 }
 
 export interface PantallaTurnos {

@@ -12,10 +12,10 @@ import {
 import { environment } from '../../../environments/environment';
 import { PantallaTurnosService } from '../../core/services/pantalla-turnos';
 import { Promociones } from '../../core/services/promociones';
-import { TurnoLlamando } from '../../core/models/pantalla-turnos.model';
+import { TurnoFinalizado, TurnoLlamando } from '../../core/models/pantalla-turnos.model';
 import { PromocionPantalla } from '../../core/models/promocion.model';
 import { PromocionesCarrusel } from './promociones-carrusel/promociones-carrusel';
-import { FranjaTurnos } from './franja-turnos/franja-turnos';
+import { PanelTurnos } from './panel-turnos/panel-turnos';
 
 const INTERVALO_ACTUALIZACION_MS = 10000;
 const INTERVALO_PROMOCIONES_MS = 60000;
@@ -24,7 +24,7 @@ const BOXES_AUDIO_URL = `${environment.apiUrl.replace(/\/api\/?$/, '')}/storage/
 
 @Component({
   selector: 'app-pantalla-turnos',
-  imports: [NgTemplateOutlet, PromocionesCarrusel, FranjaTurnos],
+  imports: [NgTemplateOutlet, PromocionesCarrusel, PanelTurnos],
   templateUrl: './pantalla-turnos.html',
   styleUrl: './pantalla-turnos.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,6 +36,7 @@ export class PantallaTurnos implements OnInit {
 
   protected readonly promociones = signal<PromocionPantalla[]>([]);
   protected readonly llamando = signal<TurnoLlamando[]>([]);
+  protected readonly ultimosLlamados = signal<TurnoFinalizado[]>([]);
   protected readonly cargando = signal(true);
   protected readonly turnoAnunciado = signal<TurnoLlamando | null>(null);
 
@@ -101,6 +102,7 @@ export class PantallaTurnos implements OnInit {
         }
 
         this.llamando.set(llamando);
+        this.ultimosLlamados.set(respuesta.data?.ultimos_finalizados ?? []);
         this.cargando.set(false);
       },
       error: () => {

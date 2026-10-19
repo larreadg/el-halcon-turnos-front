@@ -46,6 +46,9 @@ interface ItemArchivo {
 
 const TAMANO_MAXIMO_MB = 50;
 const MAXIMO_ARCHIVOS_POR_SUBIDA = 20;
+/** Tamaño exacto del área del carrusel en la pantalla de turnos (debe coincidir con el backend). */
+const ANCHO_REQUERIDO = 1200;
+const ALTO_REQUERIDO = 1080;
 const MIMES_PERMITIDOS: Record<string, TipoPromocion> = {
   'image/jpeg': 'imagen',
   'image/png': 'imagen',
@@ -82,6 +85,7 @@ export class Promociones implements OnInit {
 
   protected readonly acceptArchivos = Object.keys(MIMES_PERMITIDOS).join(',');
   protected readonly tamanoMaximoMb = TAMANO_MAXIMO_MB;
+  protected readonly tamanoRequerido = `${ANCHO_REQUERIDO} × ${ALTO_REQUERIDO} px`;
 
   protected readonly promociones = signal<Promocion[]>([]);
   protected readonly cargando = signal(false);
@@ -216,26 +220,38 @@ export class Promociones implements OnInit {
     }
   }
 
-  protected onArchivosSeleccionados(evento: Event): void {
+  protected async onArchivosSeleccionados(evento: Event): Promise<void> {
     const input = evento.target as HTMLInputElement;
     const seleccionados = Array.from(input.files ?? []);
     input.value = '';
     this.archivoError.set(null);
 
-    const rechazados: string[] = [];
+    const formatoInvalido: string[] = [];
+    const medidaInvalida: string[] = [];
     const nuevos: ItemArchivo[] = [];
 
     for (const archivo of seleccionados) {
       const tipo = MIMES_PERMITIDOS[archivo.type];
       if (!tipo || archivo.size > TAMANO_MAXIMO_MB * 1024 * 1024) {
-        rechazados.push(archivo.name);
+        formatoInvalido.push(archivo.name);
+        continue;
+      }
+
+      const url = URL.createObjectURL(archivo);
+      const medida = await this.medir(tipo, url);
+
+      if (!medida || medida.ancho !== ANCHO_REQUERIDO || medida.alto !== ALTO_REQUERIDO) {
+        URL.revokeObjectURL(url);
+        medidaInvalida.push(
+          medida ? `${archivo.name} (${medida.ancho} × ${medida.alto})` : archivo.name,
+        );
         continue;
       }
 
       nuevos.push({
         clave: `nuevo-${++this.contadorClaves}`,
         tipo,
-        url: URL.createObjectURL(archivo),
+        url,
         nombre: archivo.name,
         archivo,
       });
@@ -248,11 +264,18 @@ export class Promociones implements OnInit {
       return;
     }
 
-    if (rechazados.length) {
-      this.archivoError.set(
-        `Se omitieron ${rechazados.join(', ')}: formato no soportado o más de ${TAMANO_MAXIMO_MB} MB.`,
+    const errores: string[] = [];
+    if (formatoInvalido.length) {
+      errores.push(
+        `Se omitieron ${formatoInvalido.join(', ')}: formato no soportado o más de ${TAMANO_MAXIMO_MB} MB.`,
       );
     }
+    if (medidaInvalida.length) {
+      errores.push(
+        `Se omitieron ${medidaInvalida.join(', ')}: deben medir exactamente ${this.tamanoRequerido}.`,
+      );
+    }
+    this.archivoError.set(errores.length ? errores.join(' ') : null);
 
     if (!nuevos.length) return;
 
@@ -262,6 +285,25 @@ export class Promociones implements OnInit {
       const nombre = nuevos[0].nombre.replace(/\.[^.]+$/, '');
       this.promocionModel.update((m) => ({ ...m, titulo: nombre }));
     }
+  }
+
+  /** Lee el ancho y alto real de una imagen o video local; null si no se puede leer. */
+  private medir(tipo: TipoPromocion, url: string): Promise<{ ancho: number; alto: number } | null> {
+    return new Promise((resolve) => {
+      if (tipo === 'imagen') {
+        const imagen = new Image();
+        imagen.onload = () => resolve({ ancho: imagen.naturalWidth, alto: imagen.naturalHeight });
+        imagen.onerror = () => resolve(null);
+        imagen.src = url;
+        return;
+      }
+
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.onloadedmetadata = () => resolve({ ancho: video.videoWidth, alto: video.videoHeight });
+      video.onerror = () => resolve(null);
+      video.src = url;
+    });
   }
 
   protected moverItem(indice: number, direccion: -1 | 1): void {

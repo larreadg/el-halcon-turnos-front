@@ -1,14 +1,22 @@
 <div
-  class="flex flex-column gap-3 p-4 surface-ground overflow-hidden"
+  class="flex flex-column surface-ground overflow-hidden"
+  [class.gap-3]="promociones().length === 0"
+  [class.p-4]="promociones().length === 0"
   style="position: fixed; inset: 0"
 >
   @if (promociones().length > 0) {
-    <!-- Con promociones: franja de turnos arriba y banner protagonista -->
-    <app-franja-turnos class="flex-shrink-0" [llamando]="llamando()" [cargando]="cargando()" />
+    <!-- Con promociones: panel de turnos a la izquierda y carrusel a la derecha, a pantalla completa -->
+    <div class="flex-1 min-h-0 flex">
+      <app-panel-turnos
+        [llamando]="llamando()"
+        [ultimosLlamados]="ultimosLlamados()"
+        [cargando]="cargando()"
+      />
 
-    <main class="flex-1 min-h-0">
-      <app-promociones-carrusel [promociones]="promociones()" />
-    </main>
+      <main class="flex-1 min-w-0">
+        <app-promociones-carrusel [promociones]="promociones()" />
+      </main>
+    </div>
   } @else {
     <img src="/logo1.png" alt="El Halcón Ferretería" class="fixed top-0 left-0 m-3 h-5rem z-5" />
 

@@ -1,0 +1,41 @@
+<header class="panel__encabezado">
+  <img src="/logo1.png" alt="El Halcón Ferretería" class="panel__logo" />
+  <h1 class="panel__titulo">Ahora atendiendo</h1>
+</header>
+
+<section class="panel__actuales" [class.panel__actuales--desplazar]="desplazar()">
+  @if (cargando()) {
+    <span class="panel__vacio">Cargando...</span>
+  } @else if (llamando().length === 0) {
+    <span class="panel__vacio">Esperando próximo turno...</span>
+  } @else {
+    <div
+      class="panel__track"
+      [class.panel__track--desplazar]="desplazar()"
+      [style.animation-duration]="duracionDesplazamiento()"
+    >
+      @for (turno of turnosVisibles(); track $index) {
+        <div class="turno-actual">
+          <span class="turno-actual__numero">N° {{ turno.numero }}</span>
+          <span class="turno-actual__box">{{ etiqueta(turno) }}</span>
+        </div>
+      }
+    </div>
+  }
+</section>
+
+<section class="panel__llamados">
+  <h2 class="panel__subtitulo">Turnos llamados</h2>
+  @if (llamados().length === 0) {
+    <span class="panel__sin-llamados">Todavía no hay turnos llamados hoy.</span>
+  } @else {
+    <div class="llamados">
+      @for (turno of llamados(); track turno.id) {
+        <div class="turno-llamado">
+          <span class="turno-llamado__numero">N° {{ turno.numero }}</span>
+          <span class="turno-llamado__box">{{ etiqueta(turno) }}</span>
+        </div>
+      }
+    </div>
+  }
+</section>
