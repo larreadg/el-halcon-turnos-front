@@ -31,6 +31,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { SelectButtonModule } from 'primeng/selectbutton';
+import { GalleriaModule, GalleriaResponsiveOptions } from 'primeng/galleria';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { Promociones as PromocionesService } from '../../core/services/promociones';
@@ -94,6 +95,7 @@ const DIAS_SEMANA = [
     ToggleSwitchModule,
     ProgressBarModule,
     SelectButtonModule,
+    GalleriaModule,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './promociones.html',
@@ -124,6 +126,15 @@ export class Promociones implements OnInit {
 
   protected readonly vistaPreviaVisible = signal(false);
   protected readonly promocionVistaPrevia = signal<Promocion | null>(null);
+  protected readonly indiceVistaPrevia = signal(0);
+  protected readonly archivosVistaPrevia = computed(
+    () => this.promocionVistaPrevia()?.archivos ?? [],
+  );
+  /** Miniaturas visibles en la galería según el ancho de pantalla. */
+  protected readonly galeriaResponsive: GalleriaResponsiveOptions[] = [
+    { breakpoint: '768px', numVisible: 3 },
+    { breakpoint: '560px', numVisible: 2 },
+  ];
 
   protected readonly items = signal<ItemArchivo[]>([]);
   protected readonly archivoError = signal<string | null>(null);
@@ -299,14 +310,13 @@ export class Promociones implements OnInit {
 
   protected abrirVistaPrevia(promocion: Promocion): void {
     this.promocionVistaPrevia.set(promocion);
+    this.indiceVistaPrevia.set(0);
     this.vistaPreviaVisible.set(true);
   }
 
+  /** Al cerrar se conserva la promoción para que la animación de salida siga mostrándola. */
   protected onVistaPreviaVisibleChange(visible: boolean): void {
     this.vistaPreviaVisible.set(visible);
-    if (!visible) {
-      this.promocionVistaPrevia.set(null);
-    }
   }
 
   protected async onArchivosSeleccionados(evento: Event): Promise<void> {

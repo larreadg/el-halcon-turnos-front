@@ -401,39 +401,41 @@
   </form>
 </p-dialog>
 
-<p-dialog
+<!-- Galería a pantalla completa (sin diálogo) -->
+<p-galleria
+  [value]="archivosVistaPrevia()"
   [visible]="vistaPreviaVisible()"
   (visibleChange)="onVistaPreviaVisibleChange($event)"
-  [modal]="true"
-  [dismissableMask]="true"
-  [header]="promocionVistaPrevia()?.titulo ?? ''"
-  styleClass="w-full md:w-50rem"
+  [fullScreen]="true"
+  [activeIndex]="indiceVistaPrevia()"
+  (activeIndexChange)="indiceVistaPrevia.set($event)"
+  [numVisible]="5"
+  [responsiveOptions]="galeriaResponsive"
+  [circular]="true"
+  [showItemNavigators]="archivosVistaPrevia().length > 1"
+  [showThumbnails]="archivosVistaPrevia().length > 1"
+  [containerStyle]="{ width: 'min(90vw, 60rem)' }"
 >
-  @if (promocionVistaPrevia(); as promocion) {
-    <div class="flex flex-column gap-3">
-      @for (archivo of promocion.archivos; track archivo.id) {
-        <div class="border-round overflow-hidden surface-900 flex justify-content-center">
-          @if (archivo.tipo === 'imagen') {
-            <img
-              [src]="urlArchivo(archivo)"
-              [alt]="promocion.titulo"
-              class="max-w-full"
-              style="max-height: 60vh"
-            />
-          } @else {
-            <video
-              [src]="urlArchivo(archivo)"
-              controls
-              muted
-              class="max-w-full"
-              style="max-height: 60vh"
-            ></video>
-          }
-        </div>
+  <ng-template #item let-archivo>
+    <div class="vista-previa__item">
+      @if (archivo.tipo === 'imagen') {
+        <img [src]="urlArchivo(archivo)" [alt]="promocionVistaPrevia()?.titulo ?? ''" />
+      } @else {
+        <video [src]="urlArchivo(archivo)" controls autoplay muted></video>
       }
     </div>
-  }
-</p-dialog>
+  </ng-template>
+  <ng-template #thumbnail let-archivo>
+    <ng-container
+      [ngTemplateOutlet]="miniatura"
+      [ngTemplateOutletContext]="{
+        tipo: archivo.tipo,
+        url: urlArchivo(archivo),
+        alt: promocionVistaPrevia()?.titulo ?? '',
+      }"
+    />
+  </ng-template>
+</p-galleria>
 
 <p-toast />
 <p-confirmdialog />
