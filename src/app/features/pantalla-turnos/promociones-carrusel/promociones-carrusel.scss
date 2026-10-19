@@ -1,4 +1,6 @@
 $transicion: 1.5s; // Debe coincidir con DURACION_TRANSICION_MS
+$badge-margen: 1.25rem;
+$badge-cambio-posicion: 20s; // Tiempo que el badge queda arriba y abajo (ajustar los % de badge-posicion)
 
 :host {
   position: relative;
@@ -41,8 +43,8 @@ $transicion: 1.5s; // Debe coincidir con DURACION_TRANSICION_MS
 
 .badge-ofertas {
   position: absolute;
-  top: 1.25rem;
-  right: 1.25rem;
+  top: $badge-margen;
+  right: $badge-margen;
   z-index: 2;
   display: flex;
   align-items: center;
@@ -52,7 +54,10 @@ $transicion: 1.5s; // Debe coincidir con DURACION_TRANSICION_MS
   background: linear-gradient(135deg, #f97316, #facc15);
   color: #1f2937;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
-  animation: badge-wiggle 4s ease-in-out infinite;
+  // La posición usa top + translate para no pisar el transform del wiggle
+  animation:
+    badge-wiggle 4s ease-in-out infinite,
+    badge-posicion ($badge-cambio-posicion * 2) ease-in-out infinite;
 }
 
 .badge-ofertas__logo {
@@ -128,8 +133,27 @@ $transicion: 1.5s; // Debe coincidir con DURACION_TRANSICION_MS
   }
 }
 
+// Ciclo de 40 s: arriba 20 s, abajo 20 s; el desplazamiento entre márgenes dura 0.6 s (1.5%)
+@keyframes badge-posicion {
+  0%,
+  48.5% {
+    top: $badge-margen;
+    translate: 0 0;
+  }
+  50%,
+  98.5% {
+    top: calc(100% - #{$badge-margen});
+    translate: 0 -100%;
+  }
+  100% {
+    top: $badge-margen;
+    translate: 0 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  // Sin wiggle y cambiando de posición sin desplazamiento
   .badge-ofertas {
-    animation: none;
+    animation: badge-posicion ($badge-cambio-posicion * 2) step-end infinite;
   }
 }
