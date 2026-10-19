@@ -2,7 +2,8 @@
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
   "version": 1,
   "cli": {
-    "packageManager": "npm"
+    "packageManager": "npm",
+    "analytics": "c72194ff-7e22-4e31-a2b8-32c54859db32"
   },
   "newProjectRoot": "projects",
   "projects": {
@@ -64,6 +65,10 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "proxyConfig": "proxy.conf.json",
+            "allowedHosts": [".trycloudflare.com"]
+          },
           "configurations": {
             "production": {
               "buildTarget": "el-halcon-turnos-front:build:production"
