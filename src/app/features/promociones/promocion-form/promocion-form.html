@@ -121,8 +121,9 @@
         </div>
         <small class="text-color-secondary">
           Tamaño obligatorio: <strong>{{ tamanoRequerido }}</strong> (el área del carrusel en la
-          pantalla). Podés elegir varios archivos a la vez. JPG, PNG, WEBP, GIF, MP4 o WEBM. Máximo
-          {{ tamanoMaximoMb }} MB cada uno. Se muestran en el orden de la lista.
+          pantalla). Podés elegir varios archivos a la vez. JPG, PNG, WEBP, MP4 o WEBM. Máximo
+          {{ tamanoMaximoMb }} MB cada uno; las imágenes se comprimen a WEBP de hasta
+          {{ tamanoMaximoImagenMb }} MB. Se muestran en el orden de la lista.
         </small>
 
         @if (archivoError()) {

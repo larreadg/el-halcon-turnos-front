@@ -48,7 +48,10 @@ interface ItemArchivo {
   archivo?: File;
 }
 
-const TAMANO_MAXIMO_MB = 50;
+/** Máximo por archivo al subirlo (debe coincidir con el backend). */
+const TAMANO_MAXIMO_MB = 15;
+/** Las imágenes se guardan comprimidas a WEBP de hasta este tamaño (lo hace el backend). */
+const TAMANO_MAXIMO_IMAGEN_GUARDADA_MB = 2;
 const MAXIMO_ARCHIVOS_POR_SUBIDA = 20;
 /** Tamaño exacto del área del carrusel en la pantalla de turnos (debe coincidir con el backend). */
 const ANCHO_REQUERIDO = 1200;
@@ -57,7 +60,6 @@ const MIMES_PERMITIDOS: Record<string, TipoPromocion> = {
   'image/jpeg': 'imagen',
   'image/png': 'imagen',
   'image/webp': 'imagen',
-  'image/gif': 'imagen',
   'video/mp4': 'video',
   'video/webm': 'video',
 };
@@ -89,6 +91,7 @@ export class PromocionForm implements OnInit {
 
   protected readonly acceptArchivos = Object.keys(MIMES_PERMITIDOS).join(',');
   protected readonly tamanoMaximoMb = TAMANO_MAXIMO_MB;
+  protected readonly tamanoMaximoImagenMb = TAMANO_MAXIMO_IMAGEN_GUARDADA_MB;
   protected readonly tamanoRequerido = `${ANCHO_REQUERIDO} × ${ALTO_REQUERIDO} px`;
   protected readonly diasSemana = DIAS_SEMANA;
 
@@ -140,23 +143,36 @@ export class PromocionForm implements OnInit {
     this.cargar();
   }
 
-  /** No hay endpoint para una sola promoción: se usa el listado (también da el siguiente orden). */
   private cargar(): void {
+    if (this.editando) {
+      this.cargarPromocion(Number(this.id));
+    } else {
+      this.cargarSiguienteOrden();
+    }
+  }
+
+  /** Al crear, el orden propuesto es el siguiente al mayor de las promociones existentes. */
+  private cargarSiguienteOrden(): void {
     this.promocionesService.listar().subscribe({
       next: (respuesta) => {
-        const promociones = respuesta.data ?? [];
+        const siguienteOrden = (respuesta.data ?? []).reduce(
+          (maximo, p) => Math.max(maximo, p.orden + 1),
+          0,
+        );
+        this.promocionModel.update((m) => ({ ...m, orden: siguienteOrden }));
+        this.cargando.set(false);
+      },
+      // Sin el listado se puede crear igual, con el orden por defecto
+      error: () => this.cargando.set(false),
+    });
+  }
+
+  private cargarPromocion(id: number): void {
+    this.promocionesService.obtener(id).subscribe({
+      next: (respuesta) => {
+        const promocion = respuesta.data;
         this.cargando.set(false);
 
-        if (!this.editando) {
-          const siguienteOrden = promociones.reduce(
-            (maximo, p) => Math.max(maximo, p.orden + 1),
-            0,
-          );
-          this.promocionModel.update((m) => ({ ...m, orden: siguienteOrden }));
-          return;
-        }
-
-        const promocion = promociones.find((p) => p.id === Number(this.id));
         if (!promocion) {
           this.errorCarga.set('La promoción no existe o fue eliminada.');
           return;

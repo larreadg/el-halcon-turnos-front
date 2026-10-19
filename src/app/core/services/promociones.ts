@@ -23,6 +23,10 @@ export class Promociones {
     return this.http.get<ApiResponse<Promocion[]>>(`${this.apiUrl}/promociones`);
   }
 
+  obtener(id: number): Observable<ApiResponse<Promocion>> {
+    return this.http.get<ApiResponse<Promocion>>(`${this.apiUrl}/promociones/${id}`);
+  }
+
   listarPantalla(): Observable<ApiResponse<PromocionPantalla[]>> {
     return this.http.get<ApiResponse<PromocionPantalla[]>>(`${this.apiUrl}/promociones/pantalla`);
   }
