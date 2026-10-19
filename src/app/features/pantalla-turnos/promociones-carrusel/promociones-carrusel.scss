@@ -1,4 +1,4 @@
-$transicion: 0.9s; // Debe coincidir con DURACION_TRANSICION_MS
+$transicion: 1.5s; // Debe coincidir con DURACION_TRANSICION_MS
 
 :host {
   position: relative;
@@ -16,12 +16,9 @@ $transicion: 0.9s; // Debe coincidir con DURACION_TRANSICION_MS
   background: #111827;
 }
 
+// Fundido cruzado: la entrante aparece sobre la saliente, que queda debajo sin moverse
 .diapositiva--entrando {
-  animation: slide-in $transicion cubic-bezier(0.65, 0, 0.35, 1) both;
-}
-
-.diapositiva--saliendo {
-  animation: slide-out $transicion cubic-bezier(0.65, 0, 0.35, 1) both;
+  animation: fundido-entrada $transicion ease-in-out both;
 }
 
 // Relleno desenfocado para imágenes que no tienen la proporción de la pantalla
@@ -40,25 +37,6 @@ $transicion: 0.9s; // Debe coincidir con DURACION_TRANSICION_MS
   width: 100%;
   height: 100%;
   object-fit: contain;
-}
-
-// Zoom suave (Ken Burns): varía dirección y punto de origen entre diapositivas
-.diapositiva__media--zoom {
-  animation: zoom-in linear both;
-}
-
-.zoom-0 {
-  transform-origin: center;
-}
-.zoom-1 {
-  transform-origin: left top;
-}
-.zoom-2 {
-  transform-origin: right bottom;
-  animation-name: zoom-out;
-}
-.zoom-3 {
-  transform-origin: right top;
 }
 
 .badge-ofertas {
@@ -121,39 +99,12 @@ $transicion: 0.9s; // Debe coincidir con DURACION_TRANSICION_MS
   background: #ffffff;
 }
 
-@keyframes slide-in {
+@keyframes fundido-entrada {
   from {
-    transform: translateX(100%);
+    opacity: 0;
   }
   to {
-    transform: translateX(0);
-  }
-}
-
-@keyframes slide-out {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-100%);
-  }
-}
-
-@keyframes zoom-in {
-  from {
-    transform: scale(1);
-  }
-  to {
-    transform: scale(1.1);
-  }
-}
-
-@keyframes zoom-out {
-  from {
-    transform: scale(1.1);
-  }
-  to {
-    transform: scale(1);
+    opacity: 1;
   }
 }
 
@@ -178,9 +129,6 @@ $transicion: 0.9s; // Debe coincidir con DURACION_TRANSICION_MS
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .diapositiva--entrando,
-  .diapositiva--saliendo,
-  .diapositiva__media--zoom,
   .badge-ofertas {
     animation: none;
   }

@@ -13,9 +13,8 @@ import {
 import { Promociones } from '../../../core/services/promociones';
 import { PromocionArchivo, PromocionPantalla } from '../../../core/models/promocion.model';
 
-/** Debe coincidir con la duración de la animación de deslizamiento en el SCSS. */
-const DURACION_TRANSICION_MS = 900;
-const VARIANTES_ZOOM = 4;
+/** Debe coincidir con la duración del fundido en el SCSS. */
+const DURACION_TRANSICION_MS = 1500;
 
 /** Cada archivo de cada promoción es un paso del carrusel. */
 interface Paso {
@@ -26,13 +25,12 @@ interface Paso {
   archivo: PromocionArchivo;
 }
 
-/** Un paso en pantalla. Durante la transición conviven la diapositiva saliente y la entrante. */
+/** Un paso en pantalla. Durante el fundido conviven la diapositiva saliente y la entrante. */
 interface Diapositiva {
   clave: number;
   paso: Paso;
   saliendo: boolean;
   animarEntrada: boolean;
-  variante: number;
 }
 
 @Component({
@@ -88,11 +86,6 @@ export class PromocionesCarrusel {
     return this.promocionesService.urlArchivo(paso.archivo.id);
   }
 
-  /** Duración del zoom: lo que dura la imagen en pantalla más la transición de salida. */
-  protected duracionZoom(paso: Paso): string {
-    return `${paso.duracionSegundos + DURACION_TRANSICION_MS / 1000}s`;
-  }
-
   protected alTerminarVideo(diapositiva: Diapositiva): void {
     if (!diapositiva.saliendo) {
       this.siguiente();
@@ -135,10 +128,10 @@ export class PromocionesCarrusel {
 
     this.diapositivas.update((actuales) => [
       ...actuales.map((d) => ({ ...d, saliendo: true })),
-      { clave, paso, saliendo: false, animarEntrada, variante: clave % VARIANTES_ZOOM },
+      { clave, paso, saliendo: false, animarEntrada },
     ]);
 
-    // Quitar las diapositivas salientes cuando termina la transición
+    // Quitar las diapositivas salientes cuando termina el fundido
     const limpieza = setTimeout(() => {
       this.limpiezas.delete(limpieza);
       this.diapositivas.update((actuales) => actuales.filter((d) => d.clave >= clave));
