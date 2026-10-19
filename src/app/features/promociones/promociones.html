@@ -21,6 +21,7 @@
         <th>Título</th>
         <th>Contenido</th>
         <th>Duración por imagen</th>
+        <th>Publicación</th>
         <th>Orden</th>
         <th>Estado</th>
         <th class="w-10rem"></th>
@@ -58,12 +59,22 @@
         <td>{{ promocion.titulo }}</td>
         <td>{{ resumenContenido(promocion) }}</td>
         <td>{{ promocion.duracion_segundos }} s</td>
+        <td>
+          <div>{{ resumenDias(promocion) }}</div>
+          @if (resumenFechas(promocion); as fechas) {
+            <small class="text-color-secondary">{{ fechas }}</small>
+          }
+        </td>
         <td>{{ promocion.orden }}</td>
         <td>
-          <p-tag
-            [value]="promocion.activo ? 'Activa' : 'Inactiva'"
-            [severity]="promocion.activo ? 'success' : 'danger'"
-          />
+          @if (promocion.activo && fueraDeFecha(promocion)) {
+            <p-tag value="Hoy no se muestra" severity="warn" />
+          } @else {
+            <p-tag
+              [value]="promocion.activo ? 'Activa' : 'Inactiva'"
+              [severity]="promocion.activo ? 'success' : 'danger'"
+            />
+          }
         </td>
         <td>
           <div class="flex gap-1 justify-content-end">
@@ -95,7 +106,7 @@
     </ng-template>
     <ng-template #emptymessage>
       <tr>
-        <td colspan="7" class="text-center text-color-secondary py-4">
+        <td colspan="8" class="text-center text-color-secondary py-4">
           No hay promociones cargadas.
         </td>
       </tr>
@@ -283,6 +294,36 @@
         Los videos se reproducen completos y sin sonido en la pantalla.
       </small>
     }
+
+    <div class="flex flex-column gap-2">
+      <span id="dias-label">Días de publicación</span>
+      <p-selectbutton
+        [options]="diasSemana"
+        optionLabel="corto"
+        optionValue="valor"
+        [multiple]="true"
+        ariaLabelledBy="dias-label"
+        [formField]="promocionForm.dias"
+      />
+      <small class="text-color-secondary">
+        Sin días seleccionados se muestra todos los días.
+      </small>
+    </div>
+
+    <div class="flex flex-column sm:flex-row gap-3">
+      <div class="flex flex-column gap-2 flex-1">
+        <label for="fechaDesde">Desde (opcional)</label>
+        <input pInputText id="fechaDesde" type="date" [formField]="promocionForm.fechaDesde" />
+      </div>
+
+      <div class="flex flex-column gap-2 flex-1">
+        <label for="fechaHasta">Hasta (opcional)</label>
+        <input pInputText id="fechaHasta" type="date" [formField]="promocionForm.fechaHasta" />
+        @if (promocionForm.fechaHasta().errors().length) {
+          <small class="text-red-500">{{ promocionForm.fechaHasta().errors()[0].message }}</small>
+        }
+      </div>
+    </div>
 
     <div class="flex align-items-center gap-2">
       <p-toggleswitch inputId="activo" [formField]="promocionForm.activo" />

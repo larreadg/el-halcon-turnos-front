@@ -10,7 +10,16 @@ import {
 import { NgTemplateOutlet } from '@angular/common';
 import { HttpErrorResponse, HttpEvent, HttpEventType } from '@angular/common/http';
 import { Observable, filter, firstValueFrom, lastValueFrom, map, tap } from 'rxjs';
-import { FormField, form, max, maxLength, min, required, submit } from '@angular/forms/signals';
+import {
+  FormField,
+  form,
+  max,
+  maxLength,
+  min,
+  required,
+  submit,
+  validate,
+} from '@angular/forms/signals';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { DialogModule } from 'primeng/dialog';
@@ -21,6 +30,7 @@ import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ProgressBarModule } from 'primeng/progressbar';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { Promociones as PromocionesService } from '../../core/services/promociones';
@@ -57,6 +67,16 @@ const MIMES_PERMITIDOS: Record<string, TipoPromocion> = {
   'video/mp4': 'video',
   'video/webm': 'video',
 };
+/** Días ISO (1 = lunes ... 7 = domingo), como los guarda el backend. */
+const DIAS_SEMANA = [
+  { valor: 1, corto: 'Lun' },
+  { valor: 2, corto: 'Mar' },
+  { valor: 3, corto: 'Mié' },
+  { valor: 4, corto: 'Jue' },
+  { valor: 5, corto: 'Vie' },
+  { valor: 6, corto: 'Sáb' },
+  { valor: 7, corto: 'Dom' },
+];
 
 @Component({
   selector: 'app-promociones',
@@ -73,6 +93,7 @@ const MIMES_PERMITIDOS: Record<string, TipoPromocion> = {
     ConfirmDialogModule,
     ToggleSwitchModule,
     ProgressBarModule,
+    SelectButtonModule,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './promociones.html',
@@ -86,6 +107,7 @@ export class Promociones implements OnInit {
   protected readonly acceptArchivos = Object.keys(MIMES_PERMITIDOS).join(',');
   protected readonly tamanoMaximoMb = TAMANO_MAXIMO_MB;
   protected readonly tamanoRequerido = `${ANCHO_REQUERIDO} × ${ALTO_REQUERIDO} px`;
+  protected readonly diasSemana = DIAS_SEMANA;
 
   protected readonly promociones = signal<Promocion[]>([]);
   protected readonly cargando = signal(false);
@@ -111,9 +133,18 @@ export class Promociones implements OnInit {
     duracion: 10,
     orden: 0,
     activo: true,
+    fechaDesde: '',
+    fechaHasta: '',
+    dias: [] as number[],
   });
 
   protected readonly promocionForm = form(this.promocionModel, (schema) => {
+    validate(schema.fechaHasta, ({ value, valueOf }) => {
+      const desde = valueOf(schema.fechaDesde);
+      return desde && value() && value() < desde
+        ? { kind: 'rango', message: 'La fecha hasta no puede ser anterior a la fecha desde' }
+        : null;
+    });
     required(schema.titulo, { message: 'Ingresá un título para la promoción' });
     maxLength(schema.titulo, 120, { message: 'El título no puede superar los 120 caracteres' });
     required(schema.duracion, { message: 'Ingresá la duración' });
@@ -145,6 +176,45 @@ export class Promociones implements OnInit {
     return partes.join(' · ') || 'Sin archivos';
   }
 
+  protected resumenDias(promocion: Promocion): string {
+    if (!promocion.dias_semana.length) return 'Todos los días';
+
+    return DIAS_SEMANA.filter((d) => promocion.dias_semana.includes(d.valor))
+      .map((d) => d.corto)
+      .join(', ');
+  }
+
+  protected resumenFechas(promocion: Promocion): string | null {
+    const { fecha_desde: desde, fecha_hasta: hasta } = promocion;
+
+    if (desde && hasta) return `Del ${this.formatearFecha(desde)} al ${this.formatearFecha(hasta)}`;
+    if (desde) return `Desde el ${this.formatearFecha(desde)}`;
+    if (hasta) return `Hasta el ${this.formatearFecha(hasta)}`;
+    return null;
+  }
+
+  /** Si una promoción activa no aparece hoy en la pantalla por sus días de publicación. */
+  protected fueraDeFecha(promocion: Promocion): boolean {
+    const ahora = new Date();
+    const hoy = [
+      ahora.getFullYear(),
+      String(ahora.getMonth() + 1).padStart(2, '0'),
+      String(ahora.getDate()).padStart(2, '0'),
+    ].join('-');
+    const diaIso = ahora.getDay() || 7;
+
+    return (
+      (promocion.fecha_desde !== null && promocion.fecha_desde > hoy) ||
+      (promocion.fecha_hasta !== null && promocion.fecha_hasta < hoy) ||
+      (promocion.dias_semana.length > 0 && !promocion.dias_semana.includes(diaIso))
+    );
+  }
+
+  private formatearFecha(fecha: string): string {
+    const [anio, mes, dia] = fecha.split('-');
+    return `${dia}/${mes}/${anio}`;
+  }
+
   protected cargarPromociones(): void {
     this.cargando.set(true);
 
@@ -170,7 +240,15 @@ export class Promociones implements OnInit {
       (maximo, p) => Math.max(maximo, p.orden + 1),
       0,
     );
-    this.promocionModel.set({ titulo: '', duracion: 10, orden: siguienteOrden, activo: true });
+    this.promocionModel.set({
+      titulo: '',
+      duracion: 10,
+      orden: siguienteOrden,
+      activo: true,
+      fechaDesde: '',
+      fechaHasta: '',
+      dias: [],
+    });
     this.dialogVisible.set(true);
   }
 
@@ -193,6 +271,9 @@ export class Promociones implements OnInit {
       duracion: promocion.duracion_segundos,
       orden: promocion.orden,
       activo: promocion.activo === 1,
+      fechaDesde: promocion.fecha_desde ?? '',
+      fechaHasta: promocion.fecha_hasta ?? '',
+      dias: [...promocion.dias_semana],
     });
     this.dialogVisible.set(true);
   }
@@ -352,7 +433,7 @@ export class Promociones implements OnInit {
   }
 
   private async crearPromocion(): Promise<void> {
-    const { titulo, duracion, orden, activo } = this.promocionModel();
+    const { titulo, duracion, orden, activo, fechaDesde, fechaHasta, dias } = this.promocionModel();
     const archivos = this.items().flatMap((i) => (i.archivo ? [i.archivo] : []));
 
     await this.conProgreso(
@@ -362,6 +443,9 @@ export class Promociones implements OnInit {
         duracion_segundos: duracion,
         orden,
         activo,
+        fecha_desde: fechaDesde || null,
+        fecha_hasta: fechaHasta || null,
+        dias_semana: this.normalizarDias(dias),
       }),
     );
 
@@ -380,13 +464,23 @@ export class Promociones implements OnInit {
     const original = this.promocionEditando;
     if (!original) return;
 
-    const { titulo, duracion, orden, activo } = this.promocionModel();
+    const { titulo, duracion, orden, activo, fechaDesde, fechaHasta, dias } = this.promocionModel();
     const datos: ActualizarPromocionRequest = {};
+    const diasSemana = this.normalizarDias(dias);
 
     if (titulo.trim() !== original.titulo) datos.titulo = titulo.trim();
     if (duracion !== original.duracion_segundos) datos.duracion_segundos = duracion;
     if (orden !== original.orden) datos.orden = orden;
     if (activo !== (original.activo === 1)) datos.activo = activo;
+    // Las fechas viajan juntas para que el backend valide el rango completo
+    if (
+      (fechaDesde || null) !== original.fecha_desde ||
+      (fechaHasta || null) !== original.fecha_hasta
+    ) {
+      datos.fecha_desde = fechaDesde || null;
+      datos.fecha_hasta = fechaHasta || null;
+    }
+    if (diasSemana.join(',') !== original.dias_semana.join(',')) datos.dias_semana = diasSemana;
 
     if (Object.keys(datos).length > 0) {
       await firstValueFrom(this.promocionesService.actualizar(original.id, datos));
@@ -474,6 +568,12 @@ export class Promociones implements OnInit {
         this.mostrarError(error, 'No se pudo eliminar la promoción.');
       },
     });
+  }
+
+  /** Días ordenados; con los 7 elegidos equivale a "todos los días" (lista vacía), como en el backend. */
+  private normalizarDias(dias: number[]): number[] {
+    const ordenados = [...new Set(dias)].sort((a, b) => a - b);
+    return ordenados.length === DIAS_SEMANA.length ? [] : ordenados;
   }
 
   /** Espera la respuesta de una subida actualizando la barra de progreso. */

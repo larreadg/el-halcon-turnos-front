@@ -13,6 +13,11 @@ export interface Promocion {
   duracion_segundos: number;
   orden: number;
   activo: 0 | 1;
+  /** Rango de publicación (YYYY-MM-DD, inclusive); null = sin límite. */
+  fecha_desde: string | null;
+  fecha_hasta: string | null;
+  /** Días ISO en que se publica (1 = lunes ... 7 = domingo); vacío = todos los días. */
+  dias_semana: number[];
   creado_el: string;
   modificado_el: string | null;
   archivos: PromocionArchivo[];
@@ -29,6 +34,9 @@ export interface CrearPromocionRequest {
   duracion_segundos: number;
   orden: number;
   activo: boolean;
+  fecha_desde: string | null;
+  fecha_hasta: string | null;
+  dias_semana: number[];
 }
 
 export interface ActualizarPromocionRequest {
@@ -36,4 +44,7 @@ export interface ActualizarPromocionRequest {
   duracion_segundos?: number;
   orden?: number;
   activo?: boolean;
+  fecha_desde?: string | null;
+  fecha_hasta?: string | null;
+  dias_semana?: number[];
 }

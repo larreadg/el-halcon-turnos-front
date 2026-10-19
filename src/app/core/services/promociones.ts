@@ -34,6 +34,9 @@ export class Promociones {
     formData.append('duracion_segundos', String(datos.duracion_segundos));
     formData.append('orden', String(datos.orden));
     formData.append('activo', datos.activo ? '1' : '0');
+    formData.append('fecha_desde', datos.fecha_desde ?? '');
+    formData.append('fecha_hasta', datos.fecha_hasta ?? '');
+    formData.append('dias_semana', datos.dias_semana.join(','));
 
     return this.http.post<ApiResponse<Promocion>>(`${this.apiUrl}/promociones`, formData, {
       reportProgress: true,
