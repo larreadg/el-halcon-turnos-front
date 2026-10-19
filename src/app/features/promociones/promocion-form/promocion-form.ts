@@ -49,7 +49,7 @@ interface ItemArchivo {
 }
 
 /** Máximo por archivo al subirlo (debe coincidir con el backend). */
-const TAMANO_MAXIMO_MB = 15;
+const TAMANO_MAXIMO_MB = 25;
 /** Las imágenes se guardan comprimidas a WEBP de hasta este tamaño (lo hace el backend). */
 const TAMANO_MAXIMO_IMAGEN_GUARDADA_MB = 2;
 const MAXIMO_ARCHIVOS_POR_SUBIDA = 20;
