@@ -2,9 +2,24 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 
 import { TurnoFinalizado, TurnoLlamando } from '../../../core/models/pantalla-turnos.model';
 
-/** Turnos en atención que entran fijos en el panel; con más, se desplazan en loop. */
-const MAXIMO_FIJOS = 3;
+/** Desde esta cantidad de turnos en atención, el panel se desplaza en loop; con menos, quedan fijos. */
+const MINIMO_PARA_DESPLAZAR = 3;
 const MAXIMO_LLAMADOS = 6;
+/** Tarjetas mínimas por vuelta del loop para cubrir el alto (en atención) o el ancho (llamados). */
+const MINIMO_POR_VUELTA_ACTUALES = 5;
+const MINIMO_POR_VUELTA_LLAMADOS = 4;
+const SEGUNDOS_POR_TARJETA = 4;
+
+/**
+ * Repite los turnos hasta llenar una vuelta y la duplica, para que el loop
+ * (que se desplaza -50%) no deje huecos aunque haya un solo turno.
+ */
+function armarLoop<T>(items: T[], minimoPorVuelta: number): T[] {
+  if (items.length === 0) return [];
+  const repeticiones = Math.ceil(minimoPorVuelta / items.length);
+  const vuelta = Array.from({ length: repeticiones }, () => items).flat();
+  return [...vuelta, ...vuelta];
+}
 
 @Component({
   selector: 'app-panel-turnos',
@@ -17,16 +32,25 @@ export class PanelTurnos {
   readonly ultimosLlamados = input<TurnoFinalizado[]>([]);
   readonly cargando = input(false);
 
-  protected readonly desplazar = computed(() => this.llamando().length > MAXIMO_FIJOS);
+  protected readonly desplazar = computed(() => this.llamando().length >= MINIMO_PARA_DESPLAZAR);
 
-  protected readonly turnosVisibles = computed(() => {
-    const items = this.llamando();
-    return this.desplazar() ? [...items, ...items] : items;
-  });
+  protected readonly turnosVisibles = computed(() =>
+    this.desplazar() ? armarLoop(this.llamando(), MINIMO_POR_VUELTA_ACTUALES) : this.llamando(),
+  );
 
-  protected readonly duracionDesplazamiento = computed(() => `${this.llamando().length * 4}s`);
+  protected readonly duracionDesplazamiento = computed(
+    () => `${(this.turnosVisibles().length / 2) * SEGUNDOS_POR_TARJETA}s`,
+  );
 
   protected readonly llamados = computed(() => this.ultimosLlamados().slice(0, MAXIMO_LLAMADOS));
+
+  protected readonly llamadosVisibles = computed(() =>
+    armarLoop(this.llamados(), MINIMO_POR_VUELTA_LLAMADOS),
+  );
+
+  protected readonly duracionLlamados = computed(
+    () => `${(this.llamadosVisibles().length / 2) * SEGUNDOS_POR_TARJETA}s`,
+  );
 
   protected etiqueta(turno: TurnoLlamando | TurnoFinalizado): string {
     return turno.puesto ?? `${turno.nombres} ${turno.apellidos}`;

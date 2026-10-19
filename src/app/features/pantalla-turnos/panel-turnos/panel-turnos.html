@@ -30,12 +30,14 @@
     <span class="panel__sin-llamados">Todavía no hay turnos llamados hoy.</span>
   } @else {
     <div class="llamados">
-      @for (turno of llamados(); track turno.id) {
-        <div class="turno-llamado">
-          <span class="turno-llamado__numero">N° {{ turno.numero }}</span>
-          <span class="turno-llamado__box">{{ etiqueta(turno) }}</span>
-        </div>
-      }
+      <div class="llamados__track" [style.animation-duration]="duracionLlamados()">
+        @for (turno of llamadosVisibles(); track $index) {
+          <div class="turno-llamado">
+            <span class="turno-llamado__numero">N° {{ turno.numero }}</span>
+            <span class="turno-llamado__box">{{ etiqueta(turno) }}</span>
+          </div>
+        }
+      </div>
     </div>
   }
 </section>
