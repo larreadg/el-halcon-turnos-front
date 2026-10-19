@@ -97,6 +97,7 @@ const DIAS_SEMANA = [
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './promociones.html',
+  styleUrl: './promociones.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Promociones implements OnInit {

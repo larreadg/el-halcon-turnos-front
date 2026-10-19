@@ -60,10 +60,10 @@
         <th class="w-3rem"><p-tableHeaderCheckbox /></th>
         <th class="w-8rem">Vista previa</th>
         <th>Título</th>
-        <th>Contenido</th>
-        <th>Duración por imagen</th>
+        <th class="col-detalle">Contenido</th>
+        <th class="col-detalle">Duración por imagen</th>
         <th>Publicación</th>
-        <th>Orden</th>
+        <th class="col-detalle">Orden</th>
         <th>Estado</th>
         <th class="w-10rem"></th>
       </tr>
@@ -98,16 +98,23 @@
             }
           </button>
         </td>
-        <td>{{ promocion.titulo }}</td>
-        <td>{{ resumenContenido(promocion) }}</td>
-        <td>{{ promocion.duracion_segundos }} s</td>
+        <td>
+          <div>{{ promocion.titulo }}</div>
+          <!-- En pantallas angostas las columnas de detalle se ocultan y se resumen acá -->
+          <small class="block xl:hidden text-color-secondary">
+            {{ resumenContenido(promocion) }} · {{ promocion.duracion_segundos }} s por imagen ·
+            Orden {{ promocion.orden }}
+          </small>
+        </td>
+        <td class="col-detalle">{{ resumenContenido(promocion) }}</td>
+        <td class="col-detalle">{{ promocion.duracion_segundos }} s</td>
         <td>
           <div>{{ resumenDias(promocion) }}</div>
           @if (resumenFechas(promocion); as fechas) {
             <small class="text-color-secondary">{{ fechas }}</small>
           }
         </td>
-        <td>{{ promocion.orden }}</td>
+        <td class="col-detalle">{{ promocion.orden }}</td>
         <td>
           @if (promocion.activo && fueraDeFecha(promocion)) {
             <p-tag value="Hoy no se muestra" severity="warn" />

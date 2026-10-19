@@ -1,0 +1,9 @@
+// Columnas secundarias de la tabla: solo desde xl (PrimeFlex no trae xl:table-cell).
+// Debajo de xl se muestran resumidas bajo el título, para no generar scroll horizontal.
+.col-detalle {
+  display: none;
+
+  @media (min-width: 1200px) {
+    display: table-cell;
+  }
+}
