@@ -1,0 +1,263 @@
+<div class="flex flex-column gap-4" style="max-width: 50rem">
+  <div class="flex align-items-center gap-2">
+    <p-button
+      icon="pi pi-arrow-left"
+      [text]="true"
+      [rounded]="true"
+      severity="secondary"
+      ariaLabel="Volver a promociones"
+      routerLink="/promociones"
+      [disabled]="guardando()"
+    />
+    <div>
+      <h1 class="text-2xl font-bold m-0">
+        {{ editando ? 'Editar promoción' : 'Nueva promoción' }}
+      </h1>
+      <p class="text-color-secondary mt-1 mb-0">
+        Imágenes y videos que se muestran en la pantalla de turnos.
+      </p>
+    </div>
+  </div>
+
+  @if (cargando()) {
+    <div class="flex justify-content-center py-6">
+      <p-progressspinner styleClass="w-3rem h-3rem" strokeWidth="4" />
+    </div>
+  } @else if (errorCarga()) {
+    <div class="flex flex-column align-items-start gap-3">
+      <p-message severity="error" [text]="errorCarga()!" />
+      <p-button label="Volver a promociones" [outlined]="true" routerLink="/promociones" />
+    </div>
+  } @else {
+    <form
+      class="surface-card border-round shadow-1 p-3 md:p-4 flex flex-column gap-3"
+      (submit)="onSubmit(); $event.preventDefault()"
+    >
+      <div class="flex flex-column gap-2">
+        <span>Archivos</span>
+
+        @if (items().length) {
+          <div class="flex flex-wrap gap-2">
+            @for (
+              item of items();
+              track item.clave;
+              let i = $index, primero = $first, ultimo = $last
+            ) {
+              <div class="flex flex-column gap-1 border-1 surface-border border-round p-1 w-8rem">
+                <div class="relative">
+                  <ng-container
+                    [ngTemplateOutlet]="miniatura"
+                    [ngTemplateOutletContext]="{ tipo: item.tipo, url: item.url, alt: item.nombre }"
+                  />
+                  <span
+                    class="absolute top-0 left-0 m-1 px-2 border-round text-xs font-bold text-white"
+                    style="background: rgba(0, 0, 0, 0.65)"
+                  >
+                    {{ i + 1 }}
+                  </span>
+                  @if (item.tipo === 'video') {
+                    <i
+                      class="pi pi-video absolute bottom-0 right-0 m-1 text-white text-sm"
+                      style="text-shadow: 0 0 4px #000"
+                    ></i>
+                  }
+                </div>
+                <small
+                  class="text-color-secondary white-space-nowrap overflow-hidden text-overflow-ellipsis"
+                >
+                  {{ item.nombre }}
+                </small>
+                <div class="flex justify-content-between">
+                  <p-button
+                    icon="pi pi-arrow-left"
+                    [text]="true"
+                    size="small"
+                    severity="secondary"
+                    ariaLabel="Mover antes"
+                    [disabled]="primero || guardando()"
+                    (onClick)="moverItem(i, -1)"
+                  />
+                  <p-button
+                    icon="pi pi-times"
+                    [text]="true"
+                    size="small"
+                    severity="danger"
+                    ariaLabel="Quitar"
+                    [disabled]="guardando()"
+                    (onClick)="quitarItem(item)"
+                  />
+                  <p-button
+                    icon="pi pi-arrow-right"
+                    [text]="true"
+                    size="small"
+                    severity="secondary"
+                    ariaLabel="Mover después"
+                    [disabled]="ultimo || guardando()"
+                    (onClick)="moverItem(i, 1)"
+                  />
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <div>
+          <input
+            #inputArchivos
+            type="file"
+            class="hidden"
+            multiple
+            [accept]="acceptArchivos"
+            (change)="onArchivosSeleccionados($event)"
+          />
+          <p-button
+            type="button"
+            [label]="items().length ? 'Agregar más archivos' : 'Seleccionar imágenes o videos'"
+            icon="pi pi-upload"
+            [outlined]="true"
+            [disabled]="guardando()"
+            (onClick)="inputArchivos.click()"
+          />
+        </div>
+        <small class="text-color-secondary">
+          Tamaño obligatorio: <strong>{{ tamanoRequerido }}</strong> (el área del carrusel en la
+          pantalla). Podés elegir varios archivos a la vez. JPG, PNG, WEBP, GIF, MP4 o WEBM. Máximo
+          {{ tamanoMaximoMb }} MB cada uno. Se muestran en el orden de la lista.
+        </small>
+
+        @if (archivoError()) {
+          <small class="text-red-500">{{ archivoError() }}</small>
+        }
+      </div>
+
+      <div class="flex flex-column gap-2">
+        <label for="titulo">Título</label>
+        <input
+          pInputText
+          id="titulo"
+          type="text"
+          autocomplete="off"
+          placeholder="Ofertas de la semana"
+          [formField]="promocionForm.titulo"
+        />
+        @if (promocionForm.titulo().touched() && promocionForm.titulo().errors().length) {
+          <small class="text-red-500">{{ promocionForm.titulo().errors()[0].message }}</small>
+        }
+      </div>
+
+      <div class="flex flex-column sm:flex-row gap-3">
+        @if (tieneImagenes()) {
+          <div class="flex flex-column gap-2 flex-1">
+            <label for="duracion">Duración de cada imagen (segundos)</label>
+            <input
+              pInputText
+              id="duracion"
+              type="number"
+              step="1"
+              inputmode="numeric"
+              [formField]="promocionForm.duracion"
+            />
+            @if (promocionForm.duracion().touched() && promocionForm.duracion().errors().length) {
+              <small class="text-red-500">{{ promocionForm.duracion().errors()[0].message }}</small>
+            }
+          </div>
+        }
+
+        <div class="flex flex-column gap-2 flex-1">
+          <label for="orden">Orden</label>
+          <input
+            pInputText
+            id="orden"
+            type="number"
+            step="1"
+            inputmode="numeric"
+            [formField]="promocionForm.orden"
+          />
+          @if (promocionForm.orden().touched() && promocionForm.orden().errors().length) {
+            <small class="text-red-500">{{ promocionForm.orden().errors()[0].message }}</small>
+          }
+        </div>
+      </div>
+
+      @if (items().length && !tieneImagenes()) {
+        <small class="text-color-secondary">
+          Los videos se reproducen completos y sin sonido en la pantalla.
+        </small>
+      }
+
+      <div class="flex flex-column gap-2">
+        <span id="dias-label">Días de publicación</span>
+        <p-selectbutton
+          [options]="diasSemana"
+          optionLabel="corto"
+          optionValue="valor"
+          [multiple]="true"
+          ariaLabelledBy="dias-label"
+          [formField]="promocionForm.dias"
+        />
+        <small class="text-color-secondary">
+          Sin días seleccionados se muestra todos los días.
+        </small>
+      </div>
+
+      <div class="flex flex-column sm:flex-row gap-3">
+        <div class="flex flex-column gap-2 flex-1">
+          <label for="fechaDesde">Desde (opcional)</label>
+          <input pInputText id="fechaDesde" type="date" [formField]="promocionForm.fechaDesde" />
+        </div>
+
+        <div class="flex flex-column gap-2 flex-1">
+          <label for="fechaHasta">Hasta (opcional)</label>
+          <input pInputText id="fechaHasta" type="date" [formField]="promocionForm.fechaHasta" />
+          @if (promocionForm.fechaHasta().errors().length) {
+            <small class="text-red-500">{{ promocionForm.fechaHasta().errors()[0].message }}</small>
+          }
+        </div>
+      </div>
+
+      <div class="flex align-items-center gap-2">
+        <p-toggleswitch inputId="activo" [formField]="promocionForm.activo" />
+        <label for="activo">Mostrar en la pantalla</label>
+      </div>
+
+      @if (progreso() !== null) {
+        <p-progressbar [value]="progreso()!" />
+      }
+
+      @if (errorMensaje()) {
+        <p-message severity="error" [text]="errorMensaje()!" />
+      }
+
+      <div class="flex justify-content-end gap-2 mt-2">
+        <p-button
+          type="button"
+          label="Cancelar"
+          [text]="true"
+          severity="secondary"
+          routerLink="/promociones"
+          [disabled]="guardando()"
+        />
+        <p-button type="submit" label="Guardar" [loading]="guardando()" [disabled]="guardando()" />
+      </div>
+    </form>
+  }
+</div>
+
+<ng-template #miniatura let-tipo="tipo" let-url="url" let-alt="alt">
+  @if (tipo === 'imagen') {
+    <img
+      [src]="url"
+      [alt]="alt"
+      class="w-7rem h-4rem border-round block"
+      style="object-fit: cover"
+    />
+  } @else {
+    <video
+      [src]="url + '#t=0.5'"
+      preload="metadata"
+      muted
+      class="w-7rem h-4rem border-round block surface-900"
+      style="object-fit: cover"
+    ></video>
+  }
+</ng-template>
