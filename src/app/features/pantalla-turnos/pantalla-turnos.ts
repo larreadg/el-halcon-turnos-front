@@ -19,6 +19,10 @@ import { PanelTurnos } from './panel-turnos/panel-turnos';
 
 const INTERVALO_ACTUALIZACION_MS = 10000;
 const INTERVALO_PROMOCIONES_MS = 60000;
+/** El anuncio se ve al menos este tiempo aunque el audio falle o el navegador lo bloquee. */
+const DURACION_MINIMA_ANUNCIO_MS = 8000;
+/** Si el audio nunca avisa que terminó, el anuncio se cierra igual para no trabar la cola. */
+const DURACION_MAXIMA_ANUNCIO_MS = 20000;
 const TICKETS_AUDIO_URL = `${environment.apiUrl.replace(/\/api\/?$/, '')}/storage/tickets`;
 const BOXES_AUDIO_URL = `${environment.apiUrl.replace(/\/api\/?$/, '')}/storage/boxes`;
 
@@ -129,13 +133,36 @@ export class PantallaTurnos implements OnInit {
     this.anunciandoEnCurso = true;
     this.turnoAnunciado.set(turno);
 
-    const continuar = () => {
+    let audioTerminado = false;
+    let minimoCumplido = false;
+    let cerrado = false;
+
+    const maximo = setTimeout(() => cerrar(), DURACION_MAXIMA_ANUNCIO_MS);
+    setTimeout(() => {
+      minimoCumplido = true;
+      intentarCerrar();
+    }, DURACION_MINIMA_ANUNCIO_MS);
+
+    const cerrar = () => {
+      if (cerrado) return;
+      cerrado = true;
+      clearTimeout(maximo);
       this.anunciandoEnCurso = false;
       this.turnoAnunciado.set(null);
       this.procesarColaAnuncios();
     };
 
-    this.reproducirAudioTicket(turno, () => this.reproducirAudioBox(turno, continuar));
+    // Se cierra cuando terminó el audio y ya pasó el tiempo mínimo, lo que ocurra último
+    const intentarCerrar = () => {
+      if (audioTerminado && minimoCumplido) cerrar();
+    };
+
+    this.reproducirAudioTicket(turno, () =>
+      this.reproducirAudioBox(turno, () => {
+        audioTerminado = true;
+        intentarCerrar();
+      }),
+    );
   }
 
   private reproducirAudioTicket(turno: TurnoLlamando, continuar: () => void): void {
