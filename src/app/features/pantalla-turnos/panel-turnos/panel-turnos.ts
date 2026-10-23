@@ -4,6 +4,8 @@ import { TurnoFinalizado, TurnoLlamando } from '../../../core/models/pantalla-tu
 
 /** Desde esta cantidad de turnos en atención, el panel se desplaza en loop; con menos, quedan fijos. */
 const MINIMO_PARA_DESPLAZAR = 3;
+/** Desde esta cantidad de turnos llamados, el carrusel se mueve; con menos, quedan fijos. */
+const MINIMO_LLAMADOS_PARA_DESPLAZAR = 3;
 const MAXIMO_LLAMADOS = 6;
 /** Tarjetas mínimas por vuelta del loop para cubrir el alto (en atención) o el ancho (llamados). */
 const MINIMO_POR_VUELTA_ACTUALES = 5;
@@ -44,8 +46,14 @@ export class PanelTurnos {
 
   protected readonly llamados = computed(() => this.ultimosLlamados().slice(0, MAXIMO_LLAMADOS));
 
+  protected readonly desplazarLlamados = computed(
+    () => this.llamados().length >= MINIMO_LLAMADOS_PARA_DESPLAZAR,
+  );
+
   protected readonly llamadosVisibles = computed(() =>
-    armarLoop(this.llamados(), MINIMO_POR_VUELTA_LLAMADOS),
+    this.desplazarLlamados()
+      ? armarLoop(this.llamados(), MINIMO_POR_VUELTA_LLAMADOS)
+      : this.llamados(),
   );
 
   protected readonly duracionLlamados = computed(

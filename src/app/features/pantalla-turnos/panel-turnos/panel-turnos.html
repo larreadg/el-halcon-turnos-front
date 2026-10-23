@@ -15,7 +15,7 @@
       [style.animation-duration]="duracionDesplazamiento()"
     >
       @for (turno of turnosVisibles(); track $index) {
-        <div class="turno-actual">
+        <div class="turno-actual w-9 mx-auto">
           <span class="turno-actual__numero">N° {{ turno.numero }}</span>
           <span class="turno-actual__box">{{ etiqueta(turno) }}</span>
         </div>
@@ -29,8 +29,12 @@
   @if (llamados().length === 0) {
     <span class="panel__sin-llamados">Todavía no hay turnos llamados hoy.</span>
   } @else {
-    <div class="llamados">
-      <div class="llamados__track" [style.animation-duration]="duracionLlamados()">
+    <div class="llamados" [class.llamados--desplazar]="desplazarLlamados()">
+      <div
+        class="llamados__track"
+        [class.llamados__track--desplazar]="desplazarLlamados()"
+        [style.animation-duration]="duracionLlamados()"
+      >
         @for (turno of llamadosVisibles(); track $index) {
           <div class="turno-llamado">
             <span class="turno-llamado__numero">N° {{ turno.numero }}</span>

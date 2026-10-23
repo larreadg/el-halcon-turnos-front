@@ -110,6 +110,9 @@
 .llamados {
   container-type: inline-size;
   overflow: hidden;
+}
+
+.llamados--desplazar {
   mask-image: linear-gradient(90deg, transparent, #000 1rem, #000 calc(100% - 1rem), transparent);
 }
 
@@ -117,6 +120,9 @@
   display: flex;
   gap: 0.6rem;
   width: max-content;
+}
+
+.llamados__track--desplazar {
   animation: llamados-scroll linear infinite;
 }
 
@@ -178,7 +184,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .panel__track--desplazar,
-  .llamados__track,
+  .llamados__track--desplazar,
   .turno-actual {
     animation: none;
   }
