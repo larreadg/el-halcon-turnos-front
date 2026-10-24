@@ -1,0 +1,223 @@
+<div class="flex flex-column gap-4">
+  <div class="flex flex-column sm:flex-row sm:align-items-center sm:justify-content-between gap-2">
+    <div>
+      <h1 class="text-2xl font-bold m-0">Promociones</h1>
+      <p class="text-color-secondary mt-1 mb-0">
+        Imágenes y videos que se muestran en la pantalla de turnos.
+      </p>
+    </div>
+    <p-button label="Nueva promoción" icon="pi pi-plus" routerLink="/promociones/nuevo" />
+  </div>
+
+  @if (seleccion().length) {
+    <div
+      class="surface-card border-round shadow-1 px-3 py-2 flex flex-column sm:flex-row sm:align-items-center sm:justify-content-between gap-2"
+    >
+      <span class="font-medium">
+        {{ seleccion().length }}
+        {{ seleccion().length === 1 ? 'promoción seleccionada' : 'promociones seleccionadas' }}
+      </span>
+      <div class="flex flex-wrap gap-2">
+        <p-button
+          label="Activar"
+          icon="pi pi-eye"
+          severity="success"
+          [outlined]="true"
+          [loading]="cambiandoEstadoSeleccion() === 'activar'"
+          [disabled]="cambiandoEstadoSeleccion() !== null"
+          (onClick)="cambiarEstadoSeleccion(true)"
+        />
+        <p-button
+          label="Desactivar"
+          icon="pi pi-eye-slash"
+          severity="danger"
+          [outlined]="true"
+          [loading]="cambiandoEstadoSeleccion() === 'desactivar'"
+          [disabled]="cambiandoEstadoSeleccion() !== null"
+          (onClick)="cambiarEstadoSeleccion(false)"
+        />
+        <p-button
+          label="Quitar selección"
+          [text]="true"
+          severity="secondary"
+          [disabled]="cambiandoEstadoSeleccion() !== null"
+          (onClick)="seleccion.set([])"
+        />
+      </div>
+    </div>
+  }
+
+  <p-table
+    [value]="promociones()"
+    [loading]="cargando()"
+    dataKey="id"
+    [selection]="seleccion()"
+    (selectionChange)="seleccion.set($event)"
+    styleClass="surface-card border-round shadow-1"
+  >
+    <ng-template #header>
+      <tr>
+        <th class="w-3rem"><p-tableHeaderCheckbox /></th>
+        <th class="w-8rem">Vista previa</th>
+        <th>Título</th>
+        <th class="col-detalle">Contenido</th>
+        <th class="col-detalle">Duración por imagen</th>
+        <th>Publicación</th>
+        <th class="col-detalle">Orden</th>
+        <th>Estado</th>
+        <th class="w-10rem"></th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-promocion>
+      <tr>
+        <td><p-tableCheckbox [value]="promocion" /></td>
+        <td>
+          <button
+            type="button"
+            class="relative p-0 border-none bg-transparent cursor-pointer block"
+            [attr.aria-label]="'Ver ' + promocion.titulo"
+            (click)="abrirVistaPrevia(promocion)"
+          >
+            @if (promocion.archivos[0]; as archivo) {
+              <ng-container
+                [ngTemplateOutlet]="miniatura"
+                [ngTemplateOutletContext]="{
+                  tipo: archivo.tipo,
+                  url: urlArchivo(archivo),
+                  alt: promocion.titulo,
+                }"
+              />
+            }
+            @if (promocion.archivos.length > 1) {
+              <span
+                class="absolute bottom-0 right-0 m-1 px-2 border-round text-xs font-bold text-white"
+                style="background: rgba(0, 0, 0, 0.65)"
+              >
+                +{{ promocion.archivos.length - 1 }}
+              </span>
+            }
+          </button>
+        </td>
+        <td>
+          <div>{{ promocion.titulo }}</div>
+          <!-- En pantallas angostas las columnas de detalle se ocultan y se resumen acá -->
+          <small class="block xl:hidden text-color-secondary">
+            {{ resumenContenido(promocion) }} · {{ promocion.duracion_segundos }} s por imagen ·
+            Orden {{ promocion.orden }}
+          </small>
+        </td>
+        <td class="col-detalle">{{ resumenContenido(promocion) }}</td>
+        <td class="col-detalle">{{ promocion.duracion_segundos }} s</td>
+        <td>
+          <div>{{ resumenDias(promocion) }}</div>
+          @if (resumenFechas(promocion); as fechas) {
+            <small class="text-color-secondary">{{ fechas }}</small>
+          }
+        </td>
+        <td class="col-detalle">{{ promocion.orden }}</td>
+        <td>
+          @if (promocion.activo && fueraDeFecha(promocion)) {
+            <p-tag value="Hoy no se muestra" severity="warn" />
+          } @else {
+            <p-tag
+              [value]="promocion.activo ? 'Activa' : 'Inactiva'"
+              [severity]="promocion.activo ? 'success' : 'danger'"
+            />
+          }
+        </td>
+        <td>
+          <div class="flex gap-1 justify-content-end">
+            <p-button
+              [icon]="promocion.activo ? 'pi pi-eye-slash' : 'pi pi-eye'"
+              [text]="true"
+              severity="secondary"
+              [loading]="cambiandoEstado() === promocion.id"
+              [ariaLabel]="promocion.activo ? 'Desactivar' : 'Activar'"
+              (onClick)="cambiarEstado(promocion)"
+            />
+            <p-button
+              icon="pi pi-pencil"
+              [text]="true"
+              severity="secondary"
+              ariaLabel="Editar"
+              [routerLink]="['/promociones', promocion.id, 'editar']"
+            />
+            <p-button
+              icon="pi pi-trash"
+              [text]="true"
+              severity="danger"
+              ariaLabel="Eliminar"
+              (onClick)="confirmarEliminar(promocion)"
+            />
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="9" class="text-center text-color-secondary py-4">
+          No hay promociones cargadas.
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<ng-template #miniatura let-tipo="tipo" let-url="url" let-alt="alt">
+  @if (tipo === 'imagen') {
+    <img
+      [src]="url"
+      [alt]="alt"
+      loading="lazy"
+      class="w-7rem h-4rem border-round block"
+      style="object-fit: cover"
+    />
+  } @else {
+    <video
+      [src]="url + '#t=0.5'"
+      preload="metadata"
+      muted
+      class="w-7rem h-4rem border-round block surface-900"
+      style="object-fit: cover"
+    ></video>
+  }
+</ng-template>
+
+<!-- Galería a pantalla completa (sin diálogo) -->
+<p-galleria
+  [value]="archivosVistaPrevia()"
+  [visible]="vistaPreviaVisible()"
+  (visibleChange)="onVistaPreviaVisibleChange($event)"
+  [fullScreen]="true"
+  [activeIndex]="indiceVistaPrevia()"
+  (activeIndexChange)="indiceVistaPrevia.set($event)"
+  [numVisible]="5"
+  [responsiveOptions]="galeriaResponsive"
+  [circular]="true"
+  [showItemNavigators]="archivosVistaPrevia().length > 1"
+  [showThumbnails]="archivosVistaPrevia().length > 1"
+  [containerStyle]="{ width: 'min(90vw, 60rem)' }"
+>
+  <ng-template #item let-archivo>
+    <div class="vista-previa__item">
+      @if (archivo.tipo === 'imagen') {
+        <img [src]="urlArchivo(archivo)" [alt]="promocionVistaPrevia()?.titulo ?? ''" />
+      } @else {
+        <video [src]="urlArchivo(archivo)" controls autoplay muted></video>
+      }
+    </div>
+  </ng-template>
+  <ng-template #thumbnail let-archivo>
+    <ng-container
+      [ngTemplateOutlet]="miniatura"
+      [ngTemplateOutletContext]="{
+        tipo: archivo.tipo,
+        url: urlArchivo(archivo),
+        alt: promocionVistaPrevia()?.titulo ?? '',
+      }"
+    />
+  </ng-template>
+</p-galleria>
+
+<p-toast />
+<p-confirmdialog />

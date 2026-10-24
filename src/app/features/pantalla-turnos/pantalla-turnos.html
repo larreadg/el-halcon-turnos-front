@@ -1,40 +1,57 @@
-<div class="flex flex-column gap-3 p-4 surface-ground overflow-hidden" style="position:fixed;inset:0">
-  <img src="/logo1.png" alt="El Halcón Ferretería" class="fixed top-0 left-0 m-3 h-5rem z-5" />
+<div
+  class="flex flex-column surface-ground overflow-hidden"
+  [class.gap-3]="promociones().length === 0"
+  [class.p-4]="promociones().length === 0"
+  style="position: fixed; inset: 0"
+>
+  @if (promociones().length > 0) {
+    <!-- Con promociones: panel de turnos a la izquierda y carrusel a la derecha, a pantalla completa -->
+    <div class="flex-1 min-h-0 flex">
+      <app-panel-turnos
+        [llamando]="llamando()"
+        [ultimosLlamados]="ultimosLlamados()"
+        [cargando]="cargando()"
+      />
 
-  <header class="text-center flex-shrink-0">
-    <h1 class="text-4xl font-bold m-0 text-primary">Ahora atendiendo</h1>
-  </header>
+      <main class="flex-1 min-w-0">
+        <app-promociones-carrusel [promociones]="promociones()" />
+      </main>
+    </div>
+  } @else {
+    <img src="/logo1.png" alt="El Halcón Ferretería" class="fixed top-0 left-0 m-3 h-5rem z-5" />
 
-  <main class="flex-1 min-h-0 flex align-items-center justify-content-center">
-    @if (cargando()) {
-      <p class="text-2xl text-color-secondary">Cargando...</p>
-    } @else if (llamando().length === 0) {
-      <p class="text-3xl text-color-secondary text-center">Esperando próximo turno...</p>
-    } @else if (llamando().length === 1) {
-      <div class="w-full md:w-6 p-3">
-        <ng-container
-          [ngTemplateOutlet]="tarjetaTurno"
-          [ngTemplateOutletContext]="{ turno: llamando()[0] }"
-        ></ng-container>
-      </div>
-    } @else {
-      <div class="overflow-hidden w-full">
-        <div
-          class="llamando-track"
-          [style.animation-duration]="llamandoCarouselDuration()"
-        >
-          @for (turno of llamandoCarousel(); track $index) {
-            <div class="llamando-item p-3">
-              <ng-container
-                [ngTemplateOutlet]="tarjetaTurno"
-                [ngTemplateOutletContext]="{ turno: turno }"
-              ></ng-container>
-            </div>
-          }
+    <header class="text-center flex-shrink-0">
+      <h1 class="text-4xl font-bold m-0 text-primary">Ahora atendiendo</h1>
+    </header>
+
+    <main class="flex-1 min-h-0 flex align-items-center justify-content-center">
+      @if (cargando()) {
+        <p class="text-2xl text-color-secondary">Cargando...</p>
+      } @else if (llamando().length === 0) {
+        <p class="text-3xl text-color-secondary text-center">Esperando próximo turno...</p>
+      } @else if (llamando().length === 1) {
+        <div class="w-full md:w-6 p-3">
+          <ng-container
+            [ngTemplateOutlet]="tarjetaTurno"
+            [ngTemplateOutletContext]="{ turno: llamando()[0] }"
+          ></ng-container>
         </div>
-      </div>
-    }
-  </main>
+      } @else {
+        <div class="overflow-hidden w-full">
+          <div class="llamando-track" [style.animation-duration]="llamandoCarouselDuration()">
+            @for (turno of llamandoCarousel(); track $index) {
+              <div class="llamando-item p-3">
+                <ng-container
+                  [ngTemplateOutlet]="tarjetaTurno"
+                  [ngTemplateOutletContext]="{ turno: turno }"
+                ></ng-container>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </main>
+  }
 
   <ng-template #tarjetaTurno let-turno="turno">
     <div
@@ -50,7 +67,6 @@
       </div>
     </div>
   </ng-template>
-
 
   @if (turnoAnunciado(); as turno) {
     <div class="turno-modal">

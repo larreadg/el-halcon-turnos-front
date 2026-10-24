@@ -1,0 +1,40 @@
+@for (diapositiva of diapositivas(); track diapositiva.clave) {
+  <div class="diapositiva" [class.diapositiva--entrando]="diapositiva.animarEntrada">
+    @if (diapositiva.paso.archivo.tipo === 'imagen') {
+      <img class="diapositiva__fondo" [src]="url(diapositiva.paso)" alt="" />
+      <img
+        class="diapositiva__media"
+        [src]="url(diapositiva.paso)"
+        [alt]="diapositiva.paso.titulo"
+        (error)="siguiente()"
+      />
+    } @else {
+      <video
+        class="diapositiva__media"
+        [src]="url(diapositiva.paso)"
+        [loop]="unico()"
+        autoplay
+        muted
+        playsinline
+        (ended)="alTerminarVideo(diapositiva)"
+        (error)="alTerminarVideo(diapositiva)"
+      ></video>
+    }
+  </div>
+}
+
+<div class="badge-ofertas" aria-hidden="true">
+  <img src="/logo1.png" alt="" class="badge-ofertas__logo" />
+  <span class="badge-ofertas__texto">
+    <span>Promociones</span>
+    <span>El Halcón</span>
+  </span>
+</div>
+
+@if (promociones().length > 1) {
+  <div class="indicadores">
+    @for (promocion of promociones(); track promocion.id; let i = $index) {
+      <span class="indicador" [class.indicador--activo]="i === promocionActual()"></span>
+    }
+  </div>
+}

@@ -1,0 +1,159 @@
+$transicion: 1.5s; // Debe coincidir con DURACION_TRANSICION_MS
+$badge-margen: 1.25rem;
+$badge-cambio-posicion: 20s; // Tiempo que el badge queda arriba y abajo (ajustar los % de badge-posicion)
+
+:host {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #111827;
+}
+
+.diapositiva {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #111827;
+}
+
+// Fundido cruzado: la entrante aparece sobre la saliente, que queda debajo sin moverse
+.diapositiva--entrando {
+  animation: fundido-entrada $transicion ease-in-out both;
+}
+
+// Relleno desenfocado para imágenes que no tienen la proporción de la pantalla
+.diapositiva__fondo {
+  position: absolute;
+  inset: -5%;
+  width: 110%;
+  height: 110%;
+  object-fit: cover;
+  filter: blur(40px) brightness(0.6);
+}
+
+.diapositiva__media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.badge-ofertas {
+  position: absolute;
+  top: $badge-margen;
+  right: $badge-margen;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1.25rem 0.5rem 0.5rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #f97316, #facc15);
+  color: #1f2937;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  // La posición usa top + translate para no pisar el transform del wiggle
+  animation:
+    badge-wiggle 4s ease-in-out infinite,
+    badge-posicion ($badge-cambio-posicion * 2) ease-in-out infinite;
+}
+
+.badge-ofertas__logo {
+  height: 3.25rem;
+  padding: 0.25rem;
+  border-radius: 9999px;
+  background: #ffffff;
+}
+
+.badge-ofertas__texto {
+  display: flex;
+  flex-direction: column;
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.indicadores {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.35);
+  transform: translateX(-50%);
+}
+
+.indicador {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.5);
+  transition:
+    width 0.4s ease,
+    background-color 0.4s ease;
+}
+
+.indicador--activo {
+  width: 2rem;
+  background: #ffffff;
+}
+
+@keyframes fundido-entrada {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes badge-wiggle {
+  0%,
+  70%,
+  100% {
+    transform: scale(1) rotate(0);
+  }
+  75% {
+    transform: scale(1.12) rotate(-6deg);
+  }
+  80% {
+    transform: scale(1.12) rotate(6deg);
+  }
+  85% {
+    transform: scale(1.12) rotate(-4deg);
+  }
+  90% {
+    transform: scale(1.05) rotate(2deg);
+  }
+}
+
+// Ciclo de 40 s: arriba 20 s, abajo 20 s; el desplazamiento entre márgenes dura 0.6 s (1.5%)
+@keyframes badge-posicion {
+  0%,
+  48.5% {
+    top: $badge-margen;
+    translate: 0 0;
+  }
+  50%,
+  98.5% {
+    top: calc(100% - #{$badge-margen});
+    translate: 0 -100%;
+  }
+  100% {
+    top: $badge-margen;
+    translate: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  // Sin wiggle y cambiando de posición sin desplazamiento
+  .badge-ofertas {
+    animation: badge-posicion ($badge-cambio-posicion * 2) step-end infinite;
+  }
+}

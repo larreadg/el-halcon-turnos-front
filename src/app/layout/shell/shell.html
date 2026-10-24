@@ -15,7 +15,8 @@
     <ng-container *ngTemplateOutlet="navContent" />
   </p-drawer>
 
-  <div class="flex flex-column flex-1">
+  <!-- min-w-0: sin esto el contenido crece al ancho de las tablas y aparece scroll horizontal -->
+  <div class="flex flex-column flex-1 min-w-0">
     <header
       class="flex align-items-center justify-content-between gap-3 px-3 md:px-4 py-3 surface-card border-bottom-1 surface-border"
     >
